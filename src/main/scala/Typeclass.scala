@@ -54,7 +54,7 @@ trait JsonWriter[A] {
 }
 
 object JsonWriter {
-  def apply[A](implicit writer:JsonWriter[A]) = writer
+  def write[A](a:A)(implicit writer:JsonWriter[A]) = writer.write(a)
 }
 
 final case class Person(name: String, email: String)
@@ -65,7 +65,7 @@ object Person {
       s"""{"name": "${p.name}", "email": "${p.email}"}"""
   }
   implicit val sortablePerson = Ordering.fromLessThan[Person]((x, y) =>
-    x.name < x.name
+    x.name < y.name
   )
 }
 
@@ -75,5 +75,13 @@ object Cat {
   implicit val jsonWriterForCat = new JsonWriter[Cat] {
     def write(p: Cat) =
       s"""{"name": "${p.name}", "food": "${p.food}"}"""
+  }
+}
+
+final case class CatPerson(person: Person, cat: Cat)
+
+object CatPerson {
+  implicit val jsonWriterForCatPerson = new JsonWriter[CatPerson] {
+    def write(cp: CatPerson) = s"""{"person":${JsonWriter.write(cp.person)},"cat":"${JsonWriter.write(cp.cat)}"}"""
   }
 }
