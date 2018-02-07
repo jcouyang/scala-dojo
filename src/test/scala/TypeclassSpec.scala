@@ -119,4 +119,41 @@ It's easy to add the same behavior to any other type as well.
   it should "be very easy to convert to JSON" in {
     JsonWriter.write(CatPerson(Person("o", "oyanglulu@gmail.com"), Cat("Garfield", "chips"))) shouldBe """{"person":{"name": "o", "email": "oyanglulu@gmail.com"},"cat":"{"name": "Garfield", "food": "chips"}"}"""
   }
+
+  markup {"""
+Type enrichment
+=========
+With implicit class, you can magically add methods to any Type
+
+For example to add a new method `numberOfVowels` to `String` type, we can simply define
+a implicit class, and add the method there
+```scala
+implicit class ExtraStringMethods(str: String) {
+  val vowels = Seq('a', 'e', 'i', 'o', 'u')
+
+  def numberOfVowels =
+    str.toList.filter(vowels contains _).length
+}
+```
+
+when you do `"the quick brown fox".numberOfVowels`, Scala compiler can't find `numberOfVowels`
+in `String` type, but it will try to find a implicit class which has a `numberOfVowels`,
+if it can find one. Here compiler will fine `ExtraStringMethods`, then it will implicitly create
+a instance of `ExtraStringMethods` from string "the quick brown fox", so calling `numberOfVowels`
+will work like natively implement method for `String` type.
+"""}
+
+  it should "able to use `writeJson` method" in {
+    CatPerson(Person("o", "oyanglulu@gmail.com"), Cat("Garfield", "chips")).writeJson shouldBe """{"person":{"name": "o", "email": "oyanglulu@gmail.com"},"cat":"{"name": "Garfield", "food": "chips"}"}"""
+  }
+
+  markup {"""
+But, it's not generic enough, we still need to implement `Cat.writeJson` and `Person.writeJson`.
+How can we have a generic `writeJson` method which automaticly works for all `JsonWrite[_]` type
+"""}
+
+  "Cat" should "also able to use `writeJson`" in {
+    import JsonWriter.Ops
+    Cat("Garfield", "chips").writeJson shouldBe """{"name": "Garfield", "food": "chips"}"""
+  }
 }

@@ -1,6 +1,5 @@
 package typeclass
 
-// hint: why it has to be `sealed`?
 sealed trait TrafficLight {
   def next = {
     this match {
@@ -14,8 +13,6 @@ sealed trait TrafficLight {
 final case object Red extends TrafficLight
 final case object Green extends TrafficLight
 final case object Yellow extends TrafficLight
-
-
 
 sealed trait LinkedList[A] {
   def apply(index: Int): A =
@@ -32,7 +29,6 @@ sealed trait LinkedList[A] {
 final case class Pair[A](head: A, tail: LinkedList[A]) extends LinkedList[A]
 final case class End[A]() extends LinkedList[A]
 
-
 sealed trait CoLinkedList[+A] {
   def apply(index: Int): A =
     this match {
@@ -48,13 +44,15 @@ sealed trait CoLinkedList[+A] {
 final case class CoPair[A](head: A, tail: CoLinkedList[A]) extends CoLinkedList[A]
 final case object CoEnd extends CoLinkedList[Nothing]
 
-
 trait JsonWriter[A] {
   def write(in: A): String
 }
 
 object JsonWriter {
   def write[A](a:A)(implicit writer:JsonWriter[A]) = writer.write(a)
+  implicit class Ops[A: JsonWriter](a: A) {
+    def writeJson = JsonWriter.write(a)
+  }
 }
 
 final case class Person(name: String, email: String)
@@ -83,5 +81,8 @@ final case class CatPerson(person: Person, cat: Cat)
 object CatPerson {
   implicit val jsonWriterForCatPerson = new JsonWriter[CatPerson] {
     def write(cp: CatPerson) = s"""{"person":${JsonWriter.write(cp.person)},"cat":"${JsonWriter.write(cp.cat)}"}"""
+  }
+  implicit class CatPersonOps(cp: CatPerson) {
+    def writeJson = JsonWriter.write(cp)
   }
 }
