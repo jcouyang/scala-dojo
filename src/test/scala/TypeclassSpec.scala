@@ -38,7 +38,7 @@ But how can we do differently with Scala `trait` and `pattern matching`?
   markup {"""
 The type of `TrafficLight` you've just implemented is call *Algebraic Data Type(ADT)*, which
 means the type is algebra of `Red + Green + Yellow`, type of algebra of `+` is called Sum or Coproduct type.
-The other algebra is `x`, we've already seemed `case class` in Scala, which is Product Type.
+The other algebra is `x`, we've already tried `case class` in Scala, which is a Product Type.
 e.g. Cat is product type because it's `String x String`. You also can simply translate `+` as `or` and `x` as `and`
 then it will make more sense.
 
@@ -68,19 +68,21 @@ Variance
 You may realize that `End` does not have to be a `case class`, it doesn't have any value in it, and we
 just need one instance of `End`.
 
-Try changing it into `case object`, and fix the compiler errors.
+Try changing it into `case object`, uncomment the following case and fix the compiler errors.
 """}
 
   behavior of "Covarian LinkedList"
 
-  it should "be able to get head" in {
+  it should "have the same behaviors as LinkedList" in {
     pending
     // CoPair(1, CoPair(2, CoEnd))(0) shouldBe 1
+    // CoPair(1, CoPair(2, CoEnd))(1) shouldBe 2
+    // the [Exception] thrownBy CoPair(1, CoPair(2, CoEnd))(2) should have message "Out of Boundary"
   }
 
   markup {"""
 The way you fix the compiler error is called *Covarian*, which means if `B` is `A`'s subtype, `CoLinkedList[B]`
-is than `CoLinkedList[A]`'s subtype
+is then `CoLinkedList[A]`'s subtype
 
 Here `Nothing` is subtype of any type, since `A` is covariance, `End` of type `CoLinkedList[Nothing]` become subtype of `CoLinkedList[A]`
 
@@ -138,11 +140,11 @@ implicit class ExtraStringMethods(str: String) {
 }
 ```
 
-when you do `"the quick brown fox".numberOfVowels`, Scala compiler can't find `numberOfVowels`
+When you do `"the quick brown fox".numberOfVowels`, Scala compiler can't find `numberOfVowels`
 in `String` type, but it will try to find an implicit class which has a `numberOfVowels`,
-if it can find one. Here compiler will fine `ExtraStringMethods`, then it will implicitly create
-a instance of `ExtraStringMethods` from string "the quick brown fox", so calling `numberOfVowels`
-will just work like it's builtin implemented method for `String` type.
+if it can find one. Here compiler found `ExtraStringMethods`, then it will implicitly create
+an instance of `ExtraStringMethods` from string "the quick brown fox", so calling `numberOfVowels`
+will just work like it's builtin implemented method of `String` type.
 """}
 
   it should "able to use `writeJson` method" in {
