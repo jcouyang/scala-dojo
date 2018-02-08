@@ -21,5 +21,6 @@ Try implement `Person` and `ChipShop` in `ClassAndObject` and run `sbt testOnly 
 
   it should "only accept Cat when it's favourites food is Chips" in {
     ChipShop.willServe(Cat("Garfield", "Chips")) shouldBe true
+    ChipShop.willServe(Cat("Azrael", "Smurfs")) shouldBe false
   }
 }

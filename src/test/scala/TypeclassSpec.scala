@@ -74,7 +74,8 @@ Try changing it into `case object`, and fix the compiler errors.
   behavior of "Covarian LinkedList"
 
   it should "be able to get head" in {
-    CoPair(1, CoPair(2, CoEnd))(0) shouldBe 1
+    pending
+    // CoPair(1, CoPair(2, CoEnd))(0) shouldBe 1
   }
 
   markup {"""

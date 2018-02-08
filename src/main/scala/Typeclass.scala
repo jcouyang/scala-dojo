@@ -1,7 +1,7 @@
 package typeclass
 
 sealed trait TrafficLight {
-  def next = ???
+  def next: TrafficLight = ???
 }
 
 final case object Red extends TrafficLight
@@ -26,31 +26,31 @@ trait JsonWriter[A] {
 }
 
 object JsonWriter {
-  def write[A](a:A) = ???
+  def write[A](a:A): String = ???
   implicit class Ops[A](a: A) {
-    def writeJson = ???
+    def writeJson:String = ???
   }
 }
 
 final case class Person(name: String, email: String)
 
 object Person {
-  implicit val jsonWriterForPerson = ???
+  implicit val jsonWriterForPerson: JsonWriter[Person] = ???
   // hint: https://www.scala-lang.org/api/current/scala/math/Ordering$.html#fromLessThan[T](cmp:(T,T)=%3EBoolean):scala.math.Ordering[T]
-  implicit val sortablePerson = ???
+  implicit val sortablePerson: Ordering[Person] = ???
 }
 
 final case class Cat(name: String, food: String)
 
 object Cat {
-  implicit val jsonWriterForCat = ???
+  implicit val jsonWriterForCat: JsonWriter[Cat] = ???
 }
 
 final case class CatPerson(person: Person, cat: Cat)
 
 object CatPerson {
-  implicit val jsonWriterForCatPerson = ???
+  implicit val jsonWriterForCatPerson: JsonWriter[CatPerson] = ???
   implicit class CatPersonOps(cp: CatPerson) {
-    def writeJson = ???
+    def writeJson: String = ???
   }
 }
