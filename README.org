@@ -8,11 +8,11 @@ Most of the examples and exercises are come from underscore's book https://under
 sbt
 #+END_SRC
 
-Then type `compile` and all deps will download and everything should compile.
+Then type =compile= and all deps will download and everything should compile.
 
 ** Challenges
 
-All the exercises are well documented and defined in `*Spec` files under `test` folder.
+All the exercises are well documented and defined in =*Spec= files under =test= folder.
 
 Basically just make the following test compile and green...
 
