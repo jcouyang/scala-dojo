@@ -11,6 +11,6 @@ sbt
 ** Challenges
 All the exercises are well documented and defined in `*Spec` files under `test` folder.
 
-1. Class and Object
-2. Type classes
+1. [[https://github.com/jcouyang/essential-scala-dojo/blob/master/src/test/scala/ObjectAndClassSpec.scala][Class and Object]]
+2. [[https://github.com/jcouyang/essential-scala-dojo/blob/master/src/test/scala/TypeclassSpec.scala][Type classes]]
 
