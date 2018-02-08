@@ -1,0 +1,16 @@
+* Essential Scala Dojo
+
+Most of the examples and exercises are come from underscore's book https://underscore.io/books/essential-scala/
+
+** Up and Running
+
+#+BEGIN_SRC sh
+sbt
+#+END_SRC
+
+** Challenges
+All the exercises are well documented and defined in `*Spec` files under `test` folder.
+
+1. Class and Object
+2. Type classes
+
