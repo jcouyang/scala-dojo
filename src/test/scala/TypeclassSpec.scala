@@ -105,6 +105,7 @@ Now try not touching class `Person` and let it able to print as JSON and sortabl
   }
 
   it should "able to sort by name" in {
+    List(Person("a", "d"), Person("b", "c")).sorted shouldEqual List(Person("a", "d"), Person("b", "c"))
     List(Person("b", "c"), Person("a", "d")).sorted shouldEqual List(Person("a", "d"), Person("b", "c"))
   }
 
@@ -114,13 +115,13 @@ It's easy to add the same behavior to any other type as well.
 
   behavior of "Cat"
   it should "able to convert to JSON" in {
-    JsonWriter.write(Cat("Garfield", "chips")) shouldBe """{"name": "Garfield", "food": "chips"}"""
+    JsonWriter.write(Cat("Garfield", "coke")) shouldBe """{"name": "Garfield", "food": "coke"}"""
   }
 
   behavior of "CatPerson"
 
   it should "be very easy to convert to JSON" in {
-    JsonWriter.write(CatPerson(Person("o", "oyanglulu@gmail.com"), Cat("Garfield", "chips"))) shouldBe """{"person":{"name": "o", "email": "oyanglulu@gmail.com"},"cat":"{"name": "Garfield", "food": "chips"}"}"""
+    JsonWriter.write(CatPerson(Person("a", "b"), Cat("Garfield", "chips"))) shouldBe """{"person":{"name": "a", "email": "b"},"cat":"{"name": "Garfield", "food": "chips"}"}"""
   }
 
   markup {"""
@@ -148,7 +149,7 @@ will just work like it's builtin implemented method of `String` type.
 """}
 
   it should "able to use `writeJson` method" in {
-    CatPerson(Person("o", "oyanglulu@gmail.com"), Cat("Garfield", "chips")).writeJson shouldBe """{"person":{"name": "o", "email": "oyanglulu@gmail.com"},"cat":"{"name": "Garfield", "food": "chips"}"}"""
+    CatPerson(Person("oyjc", "oyanglulu@gmail.com"), Cat("Hello Kitty", "rainbow")).writeJson shouldBe """{"person":{"name": "oyjc", "email": "oyanglulu@gmail.com"},"cat":"{"name": "Hello Kitty", "food": "rainbow"}"}"""
   }
 
   markup {"""
@@ -156,8 +157,9 @@ But, it's not generic enough, we still need to implement `Cat.writeJson` and `Pe
 How can we have a generic `writeJson` method which automatically works for all `JsonWrite[_]` type
 """}
 
-  "Cat" should "also able to use `writeJson`" in {
+  "Cat and Person" should "also be able to use `writeJson` without any changes" in {
     import JsonWriter.Ops
     Cat("Garfield", "chips").writeJson shouldBe """{"name": "Garfield", "food": "chips"}"""
+    Person("Philip", "Fry").writeJson shouldBe """{"name": "Philip", "email": "Fry"}"""
   }
 }
