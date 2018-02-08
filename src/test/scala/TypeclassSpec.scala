@@ -21,7 +21,7 @@ But FP has pretty elegant [way](https://oleksandrmanzyuk.wordpress.com/2014/06/1
 
 Algebraic Data Type
 =========
-We all familiar with how to implement traffic light in OO with class and interface.Simplyy 3 classes Red Green Yellow extend a TrafficLight interface, and implement `next`
+We all familiar with how to implement traffic light in OO with class and interface. Simply 3 classes Red Green Yellow extend a TrafficLight interface, and implement `next`
 method in each of the 3 classes.
 
 But how can we do differently with Scala `trait` and `pattern matching`?
@@ -86,12 +86,12 @@ Here `Nothing` is subtype of any type, since `A` is covariance, `End` of type `C
 
 Type classes
 =========
-`Person` is a simple case class, when we want to print it nicely as JSON format, what we usaully does is to create a
+`Person` is a simple case class, when we want to print it nicely as JSON format, what we usually does is to create a
 interface e.g. `JsonWriter` with method `toJson` and implements it in `Person`. But if you think about it, if we need
-`Person` to have another ablility e.g. `HtmlWriter`, you need to open `Person` class and implement a new interface.
+`Person` to have another ability e.g. `HtmlWriter`, you need to open `Person` class and implement a new interface.
 
-However, FP does it completely different, with type classes, we can leave `Person` completely untouch and define it's behavior
-in type class, and than implicitly implement the type class for `Person` any where.
+However, FP does it completely different, with type classes, we can leave `Person` completely untouched and define it's behavior
+in type class, and then implicitly implement the type class for `Person` anywhere.
 
 Now try not touching class `Person` and let it able to print as JSON and sortable by name.
 """}
@@ -128,6 +128,7 @@ With implicit class, you can magically add methods to any Type
 
 For example to add a new method `numberOfVowels` to `String` type, we can simply define
 a implicit class, and add the method there
+
 ```scala
 implicit class ExtraStringMethods(str: String) {
   val vowels = Seq('a', 'e', 'i', 'o', 'u')
@@ -138,10 +139,10 @@ implicit class ExtraStringMethods(str: String) {
 ```
 
 when you do `"the quick brown fox".numberOfVowels`, Scala compiler can't find `numberOfVowels`
-in `String` type, but it will try to find a implicit class which has a `numberOfVowels`,
+in `String` type, but it will try to find an implicit class which has a `numberOfVowels`,
 if it can find one. Here compiler will fine `ExtraStringMethods`, then it will implicitly create
 a instance of `ExtraStringMethods` from string "the quick brown fox", so calling `numberOfVowels`
-will work like natively implement method for `String` type.
+will just work like it's builtin implemented method for `String` type.
 """}
 
   it should "able to use `writeJson` method" in {
@@ -150,7 +151,7 @@ will work like natively implement method for `String` type.
 
   markup {"""
 But, it's not generic enough, we still need to implement `Cat.writeJson` and `Person.writeJson`.
-How can we have a generic `writeJson` method which automaticly works for all `JsonWrite[_]` type
+How can we have a generic `writeJson` method which automatically works for all `JsonWrite[_]` type
 """}
 
   "Cat" should "also able to use `writeJson`" in {
