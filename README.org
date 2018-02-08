@@ -8,8 +8,13 @@ Most of the examples and exercises are come from underscore's book https://under
 sbt
 #+END_SRC
 
+Then type `compile` and all deps will download and everything should compile.
+
 ** Challenges
+
 All the exercises are well documented and defined in `*Spec` files under `test` folder.
+
+Basically just make the following test compile and green...
 
 1. [[https://github.com/jcouyang/essential-scala-dojo/blob/master/src/test/scala/ObjectAndClassSpec.scala][Class and Object]]
 2. [[https://github.com/jcouyang/essential-scala-dojo/blob/master/src/test/scala/TypeclassSpec.scala][Type classes]]
