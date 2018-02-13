@@ -3,8 +3,36 @@ package monad
 import org.scalatest._
 
 class MonadSpec extends AsyncFlatSpec with Matchers {
-  
+
   behavior of "Transformer"
+
+  markup {"""
+## Monad Transformer
+
+```scala
+type ErrorOr[A] = Either[String, A]
+val ihave10:ErrorOr[Int] = Right(Some(10)
+```
+
+If I just want to map `10` in side `Right` and `Some`, I have to map a function and inside which map again
+
+```scala
+ihave10.map(r => r.map(_ + 1))
+```
+
+If you have a `OptionT`, which is the Monad Transformer for `Option`, things will be lot easier
+
+```scala
+
+val ihaveOneMore = OptionT[ErrorOr, Int](ihave10).map(_ + 1)
+```
+
+if you map on the `OptionT`, it will transfer the `map` to the Option type inside `ErrorOr`
+
+Please implement `getPowerLevel` to return a EitherT, you may find
+[companion object `EitherT`](https://typelevel.org/cats/api/cats/data/EitherT$.html#left[B]:cats.data.EitherT.LeftPartiallyApplied[B]) useful to create a EitherT.
+
+"""}
 
   it should "get Bumblebee's power lever" in {
     Transformer.getPowerLevel("Bumblebee").value map { level =>
@@ -18,6 +46,10 @@ class MonadSpec extends AsyncFlatSpec with Matchers {
     }
   }
 
+  markup {"""
+Two autobots can perform a special move if their combined power level is greater than 15.
+Implement `canSpecialMove` method, you'll find out why we need a Monad Transformer here.
+"""}
   it should "get special move when Bumblebee and Hot Rod together" in {
     Transformer.canSpecialMove("Bumblebee", "Hot Rod").value map { level =>
       level shouldEqual Right(true)
@@ -30,6 +62,10 @@ class MonadSpec extends AsyncFlatSpec with Matchers {
     }
   }
 
+  markup {"""
+Finally, write a method tacticalReport that takes two ally names and prints a message
+saying whether they can perform a special move.
+"""}
   it should "return a nice msg when Bumblebee and Hot Rod together" in {
     Transformer.tacticalReport("Bumblebee", "Hot Rod") shouldBe "Bumblebee and Hot Rod are ready to roll out!"
   }
@@ -40,5 +76,16 @@ class MonadSpec extends AsyncFlatSpec with Matchers {
 
   it should "return a error msg when Bumblebee and Smurf together" in {
     Transformer.tacticalReport("Bumblebee", "Smurf") shouldBe "Comms error: Smurf unreachable"
+  }
+
+  markup {"""
+## Functor
+### Contravariant Functor
+
+"""}
+  behavior of "Printable"
+
+  it should "print anything that can be convert to string or int" in {
+    Printable.format(Box("hill")) shouldBe "\"hill\""
   }
 }
