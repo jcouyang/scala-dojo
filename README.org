@@ -3,18 +3,27 @@
 Most of the examples and exercises are come from underscore's book https://underscore.io/books/essential-scala/
 
 ** Up and Running
+Execute the following command so your sbt can download packages in multi threads
 
+#+BEGIN_SRC shell-script
+mkdir -p ~/.sbt/1.0/plugins
+echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0")' >> ~/.sbt/1.0/plugins/plugins.sbt
+#+END_SRC
+
+Run =sbt=
 #+BEGIN_SRC sh
 sbt
 #+END_SRC
 
-Then type =compile= and all deps will download and everything should compile.
+Then type =compile= and wait all deps download and everything should compile.
+
+If everything compiled, try typing in `test` command
 
 ** Challenges
 
 All the exercises are well documented and defined in =*Spec= files under =test= folder.
 
-Basically just make the following test compile and green...
+Basically just make the following tests compile and all green...
 
 1. [[https://github.com/jcouyang/essential-scala-dojo/blob/master/src/test/scala/ObjectAndClassSpec.scala][Class and Object]]
 2. [[https://github.com/jcouyang/essential-scala-dojo/blob/master/src/test/scala/TypeclassSpec.scala][Type classes]]
