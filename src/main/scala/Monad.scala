@@ -2,9 +2,49 @@ package monad
 
 import scala.concurrent.{ Await, Future }
 import cats.data.EitherT
+import cats.data.Writer
+import cats.data.Reader
+import cats.instances.vector._
 import cats.instances.future._
+import cats.syntax.writer._
+import cats.syntax.applicative._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+
+object Writers {
+
+  type Logged[A] = Writer[Vector[String], A]
+
+  def slowly[A](body: => A) =
+    try body finally Thread.sleep(1)
+
+  def factorial(n: Int): Logged[Int] = for {
+    ans <- slowly(if(n == 0) 1.pure[Logged] else factorial(n - 1).map(_ * n))
+    _ <- Vector(s"fact $n $ans").tell
+  } yield ans
+}
+
+object Readers {
+  case class Db(
+    usernames: Map[Int, String],
+    passwords: Map[String, String]
+  )
+
+  type DbReader[A] = Reader[Db, A]
+
+  def findUsername(userId: Int): DbReader[Option[String]] = Reader(db => db.usernames.get(userId))
+  def checkPassword(
+    username: String,
+    password: String): DbReader[Boolean] = Reader( db =>
+    db.passwords(username) == password
+  )
+
+  def checkLogin(userId: Int, password: String): DbReader[Boolean] =
+    findUsername(userId).flatMap(user => user match {
+      case Some(name) => checkPassword(name, password)
+      case None => Reader(_=>false)
+    })
+}
 
 object Transformer {
 
