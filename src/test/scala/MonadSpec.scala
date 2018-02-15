@@ -6,9 +6,10 @@ import scala.concurrent.Future
 class MonadSpec extends AsyncFlatSpec with Matchers {
 
   markup {"""
-## Writer Monad
+Writer Monad
+=========
 
-Writer monad is very useful for logging, espectially in a concurrent system, for example the following
+Writer monad is very useful for logging, especially in a concurrent system, for example the following
  `factorial` may executed concurrently, if it's not implemented in Writer, will be something looks like this:
 
 ```scala
@@ -19,7 +20,7 @@ def factorial(n: Int): Int = {
 }
 ```
 
-if you have 2 thread runing it, the logs of `factorial(3)` may interleave with `factorial(6)`, then it's hard to tell which log belongs to which caculation.
+if you have 2 thread runs it, the logs of `factorial(3)` may interleave with `factorial(6)`, then it's hard to tell which log belongs to which calculation.
 
 Please reimplement the `factorial` to return a Wrtier.
 
@@ -38,9 +39,23 @@ Please reimplement the `factorial` to return a Wrtier.
   }
 
   markup {"""
-## Reader Monad
+Reader Monad
+=========
 
-One common use for Readers is dependency injec on. If we have a number of opera ons that all depend on some external configura on.
+One common use for Readers is dependency injection. If we have a number of operations that all depend on some external configuration.
+
+We can simply create a Reader[A, B] from `A => B` using Reader.apply
+
+> Fun facts:
+```scala
+val catName: Reader[Cat, String] =
+  Reader(cat => cat.name)
+// catName: cats.data.Reader[Cat,String] = Kleisli(<function1>)
+```
+You may found that the value of a `Reader` is `Kleisli` instead of `Reader`, actually, Reader's more generic form is `Kleisli`
+Reader[Cat, String] is basically alias of `Kleisli[Id, Cat, String]`
+
+where `Kleisli` is generic type represents function `A => F[B]`.
 
 """}
   behavior of "Reader"
@@ -61,10 +76,56 @@ One common use for Readers is dependency injec on. If we have a number of opera 
     Readers.checkLogin(2, "dr0wss4p").run(config) shouldBe true
   }
 
+  markup {"""
+State Monad
+=========
+Same as a Writer Monad providing atomic logging, a State Monad will provide you thread safe atomic state operations.
+
+Regardless it's name is `State`, it's pure functional, lazy and immutable operations.
+
+Very similar to Reader, you can use `State.apply` to create a State Monad
+```scala
+State[Int, String](state => (state, "result"))
+```
+the differences from `Reader` is that it return a tuple which includes the new state.
+"""}
+  behavior of "State"
+
+  it should "eval Int" in {
+    States.evalOne("42").runA(Nil).value shouldBe 42
+  }
+
+  it should "eval and calculate" in {
+    import States._
+    val calculator = for {
+      _ <- evalOne("1")
+      _ <- evalOne("2")
+      ans <- evalOne("+")
+    } yield ans
+    calculator.runA(Nil).value shouldBe 3
+  }
+
+  it should "eval a list of expr" in {
+    import States._
+    val calculator = evalAll(List("1", "2", "+", "3", "*"))
+    calculator.runA(Nil).value shouldBe 9
+  }
+
+  it should "be pure and composable" in {
+    import States._
+    val calculator = for {
+      _   <- evalAll(List("1", "2", "+"))
+      _   <- evalAll(List("3", "4", "+"))
+      ans <- evalOne("*")
+    } yield ans
+    calculator.runA(Nil).value shouldBe 21
+  }
+
   behavior of "Transformer"
 
   markup {"""
-## Monad Transformer
+Monad Transformer
+=========
 
 ```scala
 type ErrorOr[A] = Either[String, A]
@@ -136,13 +197,16 @@ saying whether they can perform a special move.
   }
 
   markup {"""
-## Functor
-### Contravariant Functor
+Functor
+=========
+
+Contravariant Functor
+---------
 
 """}
   behavior of "Printable"
 
-  it should "print anything that can be convert to string or int" in {
+  it should "print anything that can be converted to string or int" in {
     Printable.format(Box("hill")) shouldBe "\"hill\""
   }
 }

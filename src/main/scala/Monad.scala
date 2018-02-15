@@ -46,6 +46,28 @@ object Readers {
     })
 }
 
+object States {
+  import cats.data.State
+  type CalcState[A] = State[List[Int], A]
+  def evalOne(sym: String): CalcState[Int] = State[List[Int], Int]{state =>
+    sym match {
+      case "+" => {
+        val ans = state.head + state.tail.head
+        (ans :: state.tail.tail, ans)
+      }
+      case "*" => {
+        val ans = state.head * state.tail.head
+        (ans :: state.tail.tail, ans)
+      }
+      case _ => (sym.toInt::state, sym.toInt)
+
+    }
+  }
+
+  def evalAll(exprs: List[String]): CalcState[Int] =
+    exprs.foldLeft(0.pure[CalcState]) { (res: CalcState[Int], exp: String) => res.flatMap(_=>evalOne(exp)) }
+}
+
 object Transformer {
 
   lazy val powerLevels = Map(
