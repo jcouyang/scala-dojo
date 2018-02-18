@@ -1,9 +1,32 @@
 package monad
 
+import cats.Functor
 import org.scalatest._
 import scala.concurrent.Future
 
 class MonadSpec extends AsyncFlatSpec with Matchers {
+
+    markup {"""
+Functor
+=========
+
+
+Contravariant Functor
+---------
+
+"""}
+  behavior of "Tree"
+
+  it should "able to be map" in {
+    Functor[Tree].map(Branch(Leaf(1), Leaf(2)))(_*2) shouldBe Branch(Leaf(2), Leaf(4))
+    Functor[Tree].map(Branch(Leaf(1), Branch(Leaf(3), Leaf(4))))(_*3) shouldBe Branch(Leaf(3), Branch(Leaf(9), Leaf(12)))
+  }
+
+  behavior of "Printable"
+
+  it should "print anything that can be converted to string or int" in {
+    Printable.format(Box("hill")) shouldBe "\"hill\""
+  }
 
   markup {"""
 Writer Monad
@@ -194,19 +217,5 @@ saying whether they can perform a special move.
 
   it should "return a error msg when Bumblebee and Smurf together" in {
     Transformer.tacticalReport("Bumblebee", "Smurf") shouldBe "Comms error: Smurf unreachable"
-  }
-
-  markup {"""
-Functor
-=========
-
-Contravariant Functor
----------
-
-"""}
-  behavior of "Printable"
-
-  it should "print anything that can be converted to string or int" in {
-    Printable.format(Box("hill")) shouldBe "\"hill\""
   }
 }

@@ -1,5 +1,6 @@
 package monad
 
+import cats.Functor
 import scala.concurrent.{ Await, Future }
 import cats.data.EitherT
 import cats.data.Writer
@@ -10,6 +11,52 @@ import cats.syntax.writer._
 import cats.syntax.applicative._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+
+sealed trait Tree[+A]
+final case class Branch[A](left: Tree[A], right: Tree[A]) extends Tree[A]
+final case class Leaf[A](value: A) extends Tree[A]
+
+object Tree {
+  implicit val treeFunctor: Functor[Tree] = new Functor[Tree] {
+    def map[A,B](value: Tree[A])(f: A=>B): Tree[B] = {
+      value match {
+        case Branch(left, right) => Branch(map(left)(f), map(right)(f))
+        case Leaf(v) => Leaf(f(v))
+      }
+    }
+  }
+}
+
+trait Printable[A] { self =>
+  def format(value: A): String
+  def contramap[B](func: B => A): Printable[B] =
+    new Printable[B] {
+      def format(value: B): String =
+        self.format(func(value))
+    }
+}
+
+object Printable {
+  def format[A: Printable](value:A): String = {
+    implicitly[Printable[A]].format(value)
+  }
+
+  implicit val stringPrintable: Printable[String] = new Printable[String] {
+    def format(value: String): String =
+      "\"" + value + "\""
+  }
+
+  implicit val booleanPrintable: Printable[Boolean] = new Printable[Boolean] {
+    def format(value: Boolean): String =
+      if(value) "yes" else "no"
+  }
+
+  implicit def boxPrintable[A](implicit p: Printable[A]): Printable[Box[A]] =
+    p.contramap((box:Box[A]) => box.value)
+}
+
+final case class Box[A](value: A)
+
 
 object Writers {
 
@@ -100,33 +147,3 @@ object Transformer {
     }
   }
 }
-
-trait Printable[A] { self =>
-  def format(value: A): String
-  def contramap[B](func: B => A): Printable[B] =
-    new Printable[B] {
-      def format(value: B): String =
-        self.format(func(value))
-    }
-}
-
-object Printable {
-  def format[A: Printable](value:A): String = {
-    implicitly[Printable[A]].format(value)
-  }
-
-  implicit val stringPrintable: Printable[String] = new Printable[String] {
-    def format(value: String): String =
-      "\"" + value + "\""
-  }
-
-  implicit val booleanPrintable: Printable[Boolean] = new Printable[Boolean] {
-    def format(value: Boolean): String =
-      if(value) "yes" else "no"
-  }
-
-  implicit def boxPrintable[A](implicit p: Printable[A]): Printable[Box[A]] =
-    p.contramap((box:Box[A]) => box.value)
-}
-
-final case class Box[A](value: A)
