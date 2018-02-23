@@ -121,7 +121,7 @@ It's easy to add the same behavior to any other type as well.
   behavior of "CatPerson"
 
   it should "be very easy to convert to JSON" in {
-    JsonWriter.write(CatPerson(Person("a", "b"), Cat("Garfield", "chips"))) shouldBe """{"person":{"name": "a", "email": "b"},"cat":"{"name": "Garfield", "food": "chips"}"}"""
+    JsonWriter.write(CatPerson(Person("a", "b"), Cat("Garfield", "chips"))) shouldBe """{"person":{"name": "a", "email": "b"},"cat":{"name": "Garfield", "food": "chips"}}"""
   }
 
   markup {"""
@@ -149,7 +149,7 @@ will just work like it's builtin implemented method of `String` type.
 """}
 
   it should "able to use `writeJson` method" in {
-    CatPerson(Person("oyjc", "oyanglulu@gmail.com"), Cat("Hello Kitty", "rainbow")).writeJson shouldBe """{"person":{"name": "oyjc", "email": "oyanglulu@gmail.com"},"cat":"{"name": "Hello Kitty", "food": "rainbow"}"}"""
+    CatPerson(Person("oyjc", "oyanglulu@gmail.com"), Cat("Hello Kitty", "rainbow")).writeJson shouldBe """{"person":{"name": "oyjc", "email": "oyanglulu@gmail.com"},"cat":{"name": "Hello Kitty", "food": "rainbow"}}"""
   }
 
   markup {"""
