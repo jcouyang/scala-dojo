@@ -3,8 +3,8 @@ package typeclass
 sealed trait TrafficLight {
   def next = {
     this match {
-      case Red => Green
-      case Green => Yellow
+      case Red    => Green
+      case Green  => Yellow
       case Yellow => Red
     }
   }
@@ -18,7 +18,7 @@ sealed trait LinkedList[A] {
   def apply(index: Int): A =
     this match {
       case Pair(head, tail) =>
-        if(index == 0)
+        if (index == 0)
           head
         else
           tail(index - 1)
@@ -33,7 +33,7 @@ sealed trait CoLinkedList[+A] {
   def apply(index: Int): A =
     this match {
       case CoPair(head, tail) =>
-        if(index == 0)
+        if (index == 0)
           head
         else
           tail(index - 1)
@@ -41,7 +41,8 @@ sealed trait CoLinkedList[+A] {
         throw new Exception("Out of Boundary")
     }
 }
-final case class CoPair[A](head: A, tail: CoLinkedList[A]) extends CoLinkedList[A]
+final case class CoPair[A](head: A, tail: CoLinkedList[A])
+    extends CoLinkedList[A]
 final case object CoEnd extends CoLinkedList[Nothing]
 
 trait JsonWriter[A] {
@@ -49,7 +50,7 @@ trait JsonWriter[A] {
 }
 
 object JsonWriter {
-  def write[A](a:A)(implicit writer:JsonWriter[A]) = writer.write(a)
+  def write[A](a: A)(implicit writer: JsonWriter[A]) = writer.write(a)
   implicit class Ops[A: JsonWriter](a: A) {
     def writeJson = JsonWriter.write(a)
   }
@@ -62,9 +63,8 @@ object Person {
     def write(p: Person) =
       s"""{"name": "${p.name}", "email": "${p.email}"}"""
   }
-  implicit val sortablePerson = Ordering.fromLessThan[Person]((x, y) =>
-    x.name < y.name
-  )
+  implicit val sortablePerson =
+    Ordering.fromLessThan[Person]((x, y) => x.name < y.name)
 }
 
 final case class Cat(name: String, food: String)
@@ -80,7 +80,9 @@ final case class CatPerson(person: Person, cat: Cat)
 
 object CatPerson {
   implicit val jsonWriterForCatPerson = new JsonWriter[CatPerson] {
-    def write(cp: CatPerson) = s"""{"person":${JsonWriter.write(cp.person)},"cat":"${JsonWriter.write(cp.cat)}"}"""
+    def write(cp: CatPerson) =
+      s"""{"person":${JsonWriter.write(cp.person)},"cat":"${JsonWriter.write(
+        cp.cat)}"}"""
   }
   implicit class CatPersonOps(cp: CatPerson) {
     def writeJson = JsonWriter.write(cp)

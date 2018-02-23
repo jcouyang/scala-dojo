@@ -1,12 +1,13 @@
 package monad
 
 import cats.Functor
+import cats.syntax.functor._
 import org.scalatest._
 import scala.concurrent.Future
 
 class MonadSpec extends AsyncFlatSpec with Matchers {
 
-    markup {"""
+  markup { """
 Functor
 =========
 
@@ -14,12 +15,21 @@ Functor
 Contravariant Functor
 ---------
 
-"""}
+""" }
   behavior of "Tree"
 
   it should "able to be map" in {
-    Functor[Tree].map(Branch(Leaf(1), Leaf(2)))(_*2) shouldBe Branch(Leaf(2), Leaf(4))
-    Functor[Tree].map(Branch(Leaf(1), Branch(Leaf(3), Leaf(4))))(_*3) shouldBe Branch(Leaf(3), Branch(Leaf(9), Leaf(12)))
+    Functor[Tree].map(Branch(Leaf(1), Leaf(2)))(_ * 2) shouldBe Branch(Leaf(2),
+                                                                       Leaf(4))
+    Functor[Tree].map(Branch(Leaf(1), Branch(Leaf(3), Leaf(4))))(_ * 3) shouldBe Branch(
+      Leaf(3),
+      Branch(Leaf(9), Leaf(12)))
+  }
+
+  it should "have implicit map method" in {
+    import Tree._
+    branch(leaf(1), branch(leaf(3), leaf(4)))
+      .map(_ * 3) shouldBe Branch(Leaf(3), Branch(Leaf(9), Leaf(12)))
   }
 
   behavior of "Printable"
@@ -28,7 +38,8 @@ Contravariant Functor
     Printable.format(Box("hill")) shouldBe "\"hill\""
   }
 
-  markup {"""
+  markup {
+    """
 Writer Monad
 =========
 
@@ -47,21 +58,32 @@ if you have 2 thread runs it, the logs of `factorial(3)` may interleave with `fa
 
 Please reimplement the `factorial` to return a Wrtier.
 
-"""}
+"""
+  }
   behavior of "Writer"
 
   it should "logs are not interleave" in {
-    Future.sequence(Vector(
-      Future(Writers.factorial(3).run),
-      Future(Writers.factorial(6).run)
-    )) map { logs =>
+    Future.sequence(
+      Vector(
+        Future(Writers.factorial(3).run),
+        Future(Writers.factorial(6).run)
+      )) map { logs =>
       logs shouldBe Vector(
-        (Vector("fact 0 1", "fact 1 1", "fact 2 2", "fact 3 6"),6),
-        (Vector("fact 0 1", "fact 1 1", "fact 2 2", "fact 3 6", "fact 4 24", "fact 5 120", "fact 6 720"),720))
+        (Vector("fact 0 1", "fact 1 1", "fact 2 2", "fact 3 6"), 6),
+        (Vector("fact 0 1",
+                "fact 1 1",
+                "fact 2 2",
+                "fact 3 6",
+                "fact 4 24",
+                "fact 5 120",
+                "fact 6 720"),
+         720)
+      )
     }
   }
 
-  markup {"""
+  markup {
+    """
 Reader Monad
 =========
 
@@ -80,12 +102,13 @@ Reader[Cat, String] is basically alias of `Kleisli[Id, Cat, String]`
 
 where `Kleisli` is generic type represents function `A => F[B]`.
 
-"""}
+"""
+  }
   behavior of "Reader"
 
   val config = Readers.Db(
-    Map( 1 -> "Jichao", 2 -> "Ouyang" ),
-    Map( "Jichao" -> "p4ssw0rd", "Ouyang" -> "dr0wss4p")
+    Map(1 -> "Jichao", 2 -> "Ouyang"),
+    Map("Jichao" -> "p4ssw0rd", "Ouyang" -> "dr0wss4p")
   )
   it should "find user's name" in {
     Readers.findUsername(1).run(config) shouldBe Some("Jichao")
@@ -99,7 +122,8 @@ where `Kleisli` is generic type represents function `A => F[B]`.
     Readers.checkLogin(2, "dr0wss4p").run(config) shouldBe true
   }
 
-  markup {"""
+  markup {
+    """
 State Monad
 =========
 Same as a Writer Monad providing atomic logging, a State Monad will provide you thread safe atomic state operations.
@@ -111,7 +135,8 @@ Very similar to Reader, you can use `State.apply` to create a State Monad
 State[Int, String](state => (state, "result"))
 ```
 the differences from `Reader` is that it return a tuple which includes the new state.
-"""}
+"""
+  }
   behavior of "State"
 
   it should "eval Int" in {
@@ -137,8 +162,8 @@ the differences from `Reader` is that it return a tuple which includes the new s
   it should "be pure and composable" in {
     import States._
     val calculator = for {
-      _   <- evalAll(List("1", "2", "+"))
-      _   <- evalAll(List("3", "4", "+"))
+      _ <- evalAll(List("1", "2", "+"))
+      _ <- evalAll(List("3", "4", "+"))
       ans <- evalOne("*")
     } yield ans
     calculator.runA(Nil).value shouldBe 21
@@ -146,7 +171,8 @@ the differences from `Reader` is that it return a tuple which includes the new s
 
   behavior of "Transformer"
 
-  markup {"""
+  markup {
+    """
 Monad Transformer
 =========
 
@@ -173,7 +199,8 @@ if you map on the `OptionT`, it will transfer the `map` to the Option type insid
 Please implement `getPowerLevel` to return a EitherT, you may find
 [companion object `EitherT`](https://typelevel.org/cats/api/cats/data/EitherT$.html#left[B]:cats.data.EitherT.LeftPartiallyApplied[B]) useful to create a EitherT.
 
-"""}
+"""
+  }
 
   it should "get Bumblebee's power lever" in {
     Transformer.getPowerLevel("Bumblebee").value map { level =>
@@ -187,10 +214,12 @@ Please implement `getPowerLevel` to return a EitherT, you may find
     }
   }
 
-  markup {"""
+  markup {
+    """
 Two autobots can perform a special move if their combined power level is greater than 15.
 Implement `canSpecialMove` method, you'll find out why we need a Monad Transformer here.
-"""}
+"""
+  }
   it should "get special move when Bumblebee and Hot Rod together" in {
     Transformer.canSpecialMove("Bumblebee", "Hot Rod").value map { level =>
       level shouldEqual Right(true)
@@ -203,10 +232,12 @@ Implement `canSpecialMove` method, you'll find out why we need a Monad Transform
     }
   }
 
-  markup {"""
+  markup {
+    """
 Finally, write a method tacticalReport that takes two ally names and prints a message
 saying whether they can perform a special move.
-"""}
+"""
+  }
   it should "return a nice msg when Bumblebee and Hot Rod together" in {
     Transformer.tacticalReport("Bumblebee", "Hot Rod") shouldBe "Bumblebee and Hot Rod are ready to roll out!"
   }

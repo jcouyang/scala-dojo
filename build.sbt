@@ -22,4 +22,6 @@ testOptions in Test ++= Seq(
   Tests.Argument(TestFrameworks.ScalaTest, "-h", "target/test-reports")
 )
 
+scalafmtOnCompile in ThisBuild := true
+
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")

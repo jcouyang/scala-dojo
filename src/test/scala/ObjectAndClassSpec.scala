@@ -3,11 +3,13 @@ package classandobject
 import org.scalatest._
 
 class ClassAndObjectSpec extends FlatSpec with Matchers {
-  markup {"""
+  markup {
+    """
 This is just a warm up excercise, which verify your compiler, sbt and IDE is working fine.
 
 Try implement `Person` and `ChipShop` in `ClassAndObject` and run `sbt testOnly *ClassAndObjectSpec`
-"""}
+"""
+  }
 
   behavior of "Friendly Person Factory"
 

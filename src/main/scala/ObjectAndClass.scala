@@ -16,8 +16,6 @@ case class Cat(color: String, food: String)
 object ChipShop {
   def willServe(cat: Cat) = cat match {
     case Cat(_, "Chips") => true
-    case _ => false
+    case _               => false
   }
 }
-
-
