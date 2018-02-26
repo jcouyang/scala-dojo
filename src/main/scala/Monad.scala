@@ -1,6 +1,7 @@
 package monad
 
 import cats.Functor
+import cats.functor.Contravariant
 import scala.concurrent.{Await, Future}
 import cats.data.EitherT
 import cats.data.Writer
@@ -32,14 +33,17 @@ object Tree {
 
 trait Printable[A] { self =>
   def format(value: A): String
-  def contramap[B](func: B => A): Printable[B] =
-    new Printable[B] {
-      def format(value: B): String =
-        self.format(func(value))
-    }
 }
 
 object Printable {
+  implicit val printableContravariant = new Contravariant[Printable] {
+    def contramap[A, B](fa: Printable[A])(func: B => A): Printable[B] = {
+      new Printable[B] {
+        def format(value: B): String = fa.format(func(value))
+      }
+    }
+  }
+
   def format[A: Printable](value: A): String = {
     implicitly[Printable[A]].format(value)
   }
@@ -55,7 +59,7 @@ object Printable {
   }
 
   implicit def boxPrintable[A](implicit p: Printable[A]): Printable[Box[A]] =
-    p.contramap((box: Box[A]) => box.value)
+    Contravariant[Printable].contramap(p)((box: Box[A]) => box.value)
 }
 
 final case class Box[A](value: A)
