@@ -81,8 +81,8 @@ final case class CatPerson(person: Person, cat: Cat)
 object CatPerson {
   implicit val jsonWriterForCatPerson = new JsonWriter[CatPerson] {
     def write(cp: CatPerson) =
-      s"""{"person":${JsonWriter.write(cp.person)},"cat":"${JsonWriter.write(
-        cp.cat)}"}"""
+      s"""{"person":${JsonWriter.write(cp.person)},"cat":${JsonWriter.write(
+        cp.cat)}}"""
   }
   implicit class CatPersonOps(cp: CatPerson) {
     def writeJson = JsonWriter.write(cp)

@@ -7,15 +7,18 @@ import scala.concurrent.Future
 
 class MonadSpec extends AsyncFlatSpec with Matchers {
 
-  markup { """
+  markup {
+    """
 Functor
 =========
 
+Function is a Typeclass that generic abstract the `map` behavior.
 
-Contravariant Functor
----------
+If we map a function to a List, it will apply the function to each of it's element, and return a
+new List. What if we need to map a function a our own custom data type, for example: Tree
 
-""" }
+"""
+  }
   behavior of "Tree"
 
   it should "able to be map" in {
@@ -26,12 +29,28 @@ Contravariant Functor
       Branch(Leaf(9), Leaf(12)))
   }
 
-  it should "have implicit map method" in {
+  it should "have implicit map method automatically" in {
     import Tree._
     branch(leaf(1), branch(leaf(3), leaf(4)))
       .map(_ * 3) shouldBe Branch(Leaf(3), Branch(Leaf(9), Leaf(12)))
   }
 
+  markup {
+    """
+
+Contravariant Functor
+---------
+There's another variant of Functor with a reverse "arrow" of map, which we call it `contramap`
+
+for a Functor, we have `map[A, B](fa: F[A])(A=>B): F[B]`, contrat map reverse the "arrow"
+
+`contramap[A,B](fa: F[A])(B=>A): F[B]`
+
+which means, if you have B=>A function and a F[A], you can get a F[B]
+
+If it's hard to understand why we need 
+"""
+  }
   behavior of "Printable"
 
   it should "print anything that can be converted to string or int" in {
