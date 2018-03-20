@@ -1,6 +1,10 @@
 * Essential Scala Dojo
 
-Most of the examples and exercises are come from underscore's book https://underscore.io/books/essential-scala/
+Most of the examples and exercises are come from underscore's books 
+
+- https://underscore.io/books/essential-scala/
+- https://underscore.io/books/scala-with-cats/
+- https://underscore.io/books/shapeless-guide/
 
 ** Up and Running
 Execute the following command so your sbt can download packages in multi threads
