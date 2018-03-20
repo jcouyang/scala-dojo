@@ -1,7 +1,10 @@
 package monad
 
-import cats.Functor
+import cats.data.Validated.{Invalid, Valid}
+import cats.{Functor, Monad, Id, Cartesian}
+import cats.instances.future._
 import cats.syntax.functor._
+import cats.instances.option._
 import org.scalatest._
 import scala.concurrent.Future
 
@@ -15,7 +18,7 @@ Functor
 Function is a Typeclass that generic abstract the `map` behavior.
 
 If we map a function to a List, it will apply the function to each of it's element, and return a
-new List. What if we need to map a function a our own custom data type, for example: Tree
+new List. What if we need to map a function to our own custom data type, for example: Tree
 
 """
   }
@@ -48,13 +51,59 @@ for a Functor, we have `map[A, B](fa: F[A])(A=>B): F[B]`, contrat map reverse th
 
 which means, if you have B=>A function and a F[A], you can get a F[B]
 
-If it's hard to understand why we need 
+If it's hard to understand why we need a contramap, think about if type A is printable,
+and you can convert B to A with function `B => A`, than you can say that B is also printable.
 """
   }
   behavior of "Printable"
 
   it should "print anything that can be converted to string or int" in {
     Printable.format(Box("hill")) shouldBe "\"hill\""
+  }
+
+  markup {
+    """
+Identity Monad
+=========
+Monad is also a Functor, but with two more method `pure` and `flatMap`.
+The simplest Monad is Id Monad, which has type:
+```
+type Id[A] = A
+```
+
+so basically if you do:
+```
+val a = Monad[Id].pure(3)
+// a: cats.Id[Int] = 3
+
+val b = Monad[Id].flatMap(a)(_ + 1)
+// b: cats.Id[Int] = 4
+```
+type of `a` is equal to `Int` as well
+
+It seems simple but it's actually very powerful and usaful because a is now a Monad,
+which means you can `map` or `flatMap` it just like any Monad.
+
+```
+for {
+  x <- a
+  y <- b
+} yield x + y
+```
+
+Now let's implement a generic `sumSquare` function to see how useful is `Id`
+"""
+  }
+
+  behavior of "Id Monad"
+
+  it should "able to calculate sum square of Future values" in {
+    IdMonad.sumSquare(Future(3), Future(4)) map { result =>
+      result shouldBe 25
+    }
+  }
+  it should "able to use Id monad to lower the type level and verify the calculation logic much more easier" in {
+    IdMonad.sumSquare(Monad[Id].pure(3), Monad[Id].pure(4)) shouldBe 25
   }
 
   markup {
@@ -116,8 +165,9 @@ val catName: Reader[Cat, String] =
   Reader(cat => cat.name)
 // catName: cats.data.Reader[Cat,String] = Kleisli(<function1>)
 ```
-You may found that the value of a `Reader` is `Kleisli` instead of `Reader`, actually, Reader's more generic form is `Kleisli`
-Reader[Cat, String] is basically alias of `Kleisli[Id, Cat, String]`
+You may found that the value of a `Reader` is `Kleisli` instead of `Reader`, actually, `Kleisli` more generic form of `Reader`
+
+`Reader[Cat, String]` is basically alias of `Kleisli[Id, Cat, String]`
 
 where `Kleisli` is generic type represents function `A => F[B]`.
 
@@ -267,5 +317,90 @@ saying whether they can perform a special move.
 
   it should "return a error msg when Bumblebee and Smurf together" in {
     Transformer.tacticalReport("Bumblebee", "Smurf") shouldBe "Comms error: Smurf unreachable"
+  }
+
+  markup {
+    """
+Semigroupal a.k.a Cartesian
+=========
+Semigroupal is a type class that allows us to combine contexts with method `product`
+```
+trait Semigroupal[F[_]] {
+  def product[A, B](fa: F[A], fb: F[B]): F[(A, B)]
+}
+```
+If we have a `F[A]` and `F[B]`, `product` method can combine them into `F[(A, B)]`
+"""
+  }
+
+  behavior of "Semigroupal"
+
+  it should "join 2 contexts" in {
+    Cartesian[Option].product(Some(123), Some("abc")) shouldBe Some(
+      (123, "abc"))
+  }
+
+  it should "join 3 contexts" in {
+    Cartesian.tuple3(Option(1), Option(2), Option(3)) shouldBe Some((1, 2, 3))
+  }
+  markup {
+    """
+Semigroupal has predefined up to tuple22, the same size as tuple.
+
+There is also a shortcut syntax for tupleN from `cats.syntax.apply`
+```
+import cats.syntax.apply._
+(Option(1), Option(2), Option(3)).tupled
+```
+Try create a Cat with some Future value using `tupled` and map:
+"""
+  }
+
+  it should "create Cat from Future value" in {
+    SemiNAppli.createCatFromFuture(Future("Garfield"),
+                                   Future(1978),
+                                   Future("Lasagne")) map { cat =>
+      cat shouldBe Cat("Garfield", 1978, "Lasagne")
+    }
+  }
+
+  markup {
+    """
+Validated
+=========
+Either is a fail fast data type, which means if something goes wrong, it will skip everything
+else. But when it comes to a senario of validationg form, we would rather validate everything
+and return all invalid message at one go.
+
+"""
+  }
+
+  behavior of "create Cat from form input"
+  it should "check empty input " in {
+    SemiNAppli.createCatFromForm(Map()) shouldBe Invalid(
+      List("name field not specified",
+           "birth field not specified",
+           "food field not specified"))
+  }
+
+  it should "check birth is a digit" in {
+    SemiNAppli.createCatFromForm(Map("birth" -> "not a number")) shouldBe Invalid(
+      List("name field not specified",
+           "invalid birth For input string: \"not a number\"",
+           "food field not specified"))
+  }
+
+  it should "check blank" in {
+    SemiNAppli.createCatFromForm(Map("name" -> "", "birth" -> "not a number")) shouldBe Invalid(
+      List("name should not be blank",
+           "invalid birth For input string: \"not a number\"",
+           "food field not specified"))
+  }
+
+  it should "create a Cat" in {
+    SemiNAppli.createCatFromForm(Map("name" -> "Garfield",
+                                     "birth" -> "1978",
+                                     "food" -> "Lasagne")) shouldBe Valid(
+      Cat("Garfield", 1978, "Lasagne"))
   }
 }

@@ -1,18 +1,22 @@
 package monad
 
-import cats.Functor
-import cats.functor.Contravariant
 import scala.concurrent.{Await, Future}
-import cats.data.EitherT
-import cats.data.Writer
-import cats.data.Reader
-import cats.instances.vector._
-import cats.instances.future._
-import cats.syntax.writer._
-import cats.syntax.applicative._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
+import cats.{Functor, Monad}
+import cats.data.{EitherT, Reader, Validated, Writer}
+import cats.functor.Contravariant
+import cats.instances.future._
+import cats.instances.list._
+import cats.instances.vector._
+import cats.syntax.applicative._
+import cats.syntax.apply._
+import cats.syntax.either._
+import cats.syntax.flatMap._
+import cats.syntax.functor._
+import cats.syntax.writer._
+import scala.util.Try
 sealed trait Tree[+A]
 final case class Branch[A](left: Tree[A], right: Tree[A]) extends Tree[A]
 final case class Leaf[A](value: A) extends Tree[A]
@@ -63,6 +67,14 @@ object Printable {
 }
 
 final case class Box[A](value: A)
+
+object IdMonad {
+  def sumSquare[F[_]: Monad](a: F[Int], b: F[Int]): F[Int] =
+    for {
+      x <- a
+      y <- b
+    } yield x * x + y * y
+}
 
 object Writers {
 
@@ -157,4 +169,40 @@ object Transformer {
       case Right(msg) => msg
     }
   }
+}
+
+case class Cat(name: String, birth: Int, food: String)
+object SemiNAppli {
+  def createCatFromFuture(name: Future[String],
+                          birth: Future[Int],
+                          food: Future[String]) = {
+    (name, birth, food).mapN(Cat.apply)
+  }
+
+  type AllErrorOr[A] = Validated[List[String], A]
+  type FormData = Map[String, String]
+  val notBlank = (field: String) =>
+    (str: String) =>
+      if (str.trim.isEmpty()) Left(List(field + " should not be blank"))
+      else Right(str)
+
+  def createCatFromForm(data: FormData): AllErrorOr[Cat] =
+    (
+      data
+        .get("name")
+        .toRight(List("name field not specified"))
+        .flatMap(notBlank("name"))
+        .toValidated,
+      data
+        .get("birth")
+        .toRight(List("birth field not specified"))
+        .flatMap(x =>
+          Try { x.toInt }.toEither.left.map(e =>
+            List("invalid birth " + e.getMessage)))
+        .toValidated,
+      data
+        .get("food")
+        .toRight(List("food field not specified"))
+        .toValidated
+    ).mapN(Cat.apply)
 }
