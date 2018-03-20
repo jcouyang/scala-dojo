@@ -1,5 +1,8 @@
 package monad
 
+import cats.Apply
+import cats.data.Validated
+import cats.data.Validated.Valid
 import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -17,6 +20,7 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.writer._
 import scala.util.Try
+import cats.syntax.traverse._
 sealed trait Tree[+A]
 final case class Branch[A](left: Tree[A], right: Tree[A]) extends Tree[A]
 final case class Leaf[A](value: A) extends Tree[A]
@@ -205,4 +209,35 @@ object SemiNAppli {
         .toRight(List("food field not specified"))
         .toValidated
     ).mapN(Cat.apply)
+
+  def applyCat(data: FormData) =
+    Apply[AllErrorOr].ap3(
+      Valid(Cat.apply): AllErrorOr[(String, Int, String) => Cat])(
+      data
+        .get("name")
+        .toRight(List("name field not specified"))
+        .flatMap(notBlank("name"))
+        .toValidated,
+      data
+        .get("birth")
+        .toRight(List("birth field not specified"))
+        .flatMap(x =>
+          Try { x.toInt }.toEither.left.map(e =>
+            List("invalid birth " + e.getMessage)))
+        .toValidated,
+      data
+        .get("food")
+        .toRight(List("food field not specified"))
+        .toValidated
+    )
+}
+
+object UptimeRobot {
+  def getUptime(host: String) = Future(host.length * 60)
+
+  def allUptimes(hosts: List[String]): Future[List[Int]] =
+    Future.traverse(hosts)(getUptime)
+
+  def asyncGetUptimes(uptimes: List[Future[Int]]): Future[List[Int]] =
+    uptimes.sequence
 }
