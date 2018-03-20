@@ -18,7 +18,8 @@ final case class End[A]() extends LinkedList[A]
 sealed trait CoLinkedList[A] {
   def apply(index: Int): A = ???
 }
-final case class CoPair[A](head: A, tail: CoLinkedList[A]) extends CoLinkedList[A]
+final case class CoPair[A](head: A, tail: CoLinkedList[A])
+    extends CoLinkedList[A]
 final case object CoEnd extends CoLinkedList[Nothing]
 
 trait JsonWriter[A] {
@@ -26,9 +27,9 @@ trait JsonWriter[A] {
 }
 
 object JsonWriter {
-  def write[A](a:A): String = ???
+  def write[A](a: A): String = ???
   implicit class Ops[A](a: A) {
-    def writeJson:String = ???
+    def writeJson: String = ???
   }
 }
 

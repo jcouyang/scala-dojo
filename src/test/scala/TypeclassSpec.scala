@@ -4,7 +4,8 @@ import org.scalatest._
 
 class TypeclassSpec extends FlatSpec with Matchers {
 
-  markup { """
+  markup {
+    """
 Type classes
 ------
 Type classes is somewhat like an FP design pattern, with type classes
@@ -25,7 +26,8 @@ We all familiar with how to implement traffic light in OO with class and interfa
 method in each of the 3 classes.
 
 But how can we do differently with Scala `trait` and `pattern matching`?
-  """ }
+  """
+  }
 
   behavior of "TrafficLight"
 
@@ -35,7 +37,8 @@ But how can we do differently with Scala `trait` and `pattern matching`?
     Yellow.next shouldBe Red
   }
 
-  markup {"""
+  markup {
+    """
 The type of `TrafficLight` you've just implemented is call *Algebraic Data Type(ADT)*, which
 means the type is algebra of `Red + Green + Yellow`, type of algebra of `+` is called Sum or Coproduct type.
 The other algebra is `x`, we've already tried `case class` in Scala, which is a Product Type.
@@ -46,7 +49,8 @@ Recursive Data Type
 =========
 with ADT it's very easy to implement a linked list in Scala as well.
 Try using sum and product type to implement a `LinkedList`. Type can be recursive as well.
-"""}
+"""
+  }
 
   behavior of "LinkedList of 2 elements"
 
@@ -59,17 +63,19 @@ Try using sum and product type to implement a `LinkedList`. Type can be recursiv
   }
 
   it should "throw error Out of Boundary exception if try to get 3rd" in {
-    the [Exception] thrownBy Pair(1, Pair(2, End()))(2) should have message "Out of Boundary"
+    the[Exception] thrownBy Pair(1, Pair(2, End()))(2) should have message "Out of Boundary"
   }
 
-  markup {"""
+  markup {
+    """
 Variance
 =========
 You may realize that `End` does not have to be a `case class`, it doesn't have any value in it, and we
 just need one instance of `End`.
 
 Try changing it into `case object`, uncomment the following case and fix the compiler errors.
-"""}
+"""
+  }
 
   behavior of "Covarian LinkedList"
 
@@ -80,7 +86,8 @@ Try changing it into `case object`, uncomment the following case and fix the com
     // the [Exception] thrownBy CoPair(1, CoPair(2, CoEnd))(2) should have message "Out of Boundary"
   }
 
-  markup {"""
+  markup {
+    """
 The way you fix the compiler error is called *Covarian*, which means if `B` is `A`'s subtype, `CoLinkedList[B]`
 is then `CoLinkedList[A]`'s subtype
 
@@ -96,7 +103,8 @@ However, FP does it completely different, with type classes, we can leave `Perso
 in type class, and then implicitly implement the type class for `Person` anywhere.
 
 Now try not touching class `Person` and let it able to print as JSON and sortable by name.
-"""}
+"""
+  }
 
   behavior of "Person"
 
@@ -105,13 +113,17 @@ Now try not touching class `Person` and let it able to print as JSON and sortabl
   }
 
   it should "able to sort by name" in {
-    List(Person("a", "d"), Person("b", "c")).sorted shouldEqual List(Person("a", "d"), Person("b", "c"))
-    List(Person("b", "c"), Person("a", "d")).sorted shouldEqual List(Person("a", "d"), Person("b", "c"))
+    List(Person("a", "d"), Person("b", "c")).sorted shouldEqual List(
+      Person("a", "d"),
+      Person("b", "c"))
+    List(Person("b", "c"), Person("a", "d")).sorted shouldEqual List(
+      Person("a", "d"),
+      Person("b", "c"))
   }
 
-  markup {"""
+  markup { """
 It's easy to add the same behavior to any other type as well.
-"""}
+""" }
 
   behavior of "Cat"
   it should "able to convert to JSON" in {
@@ -124,7 +136,8 @@ It's easy to add the same behavior to any other type as well.
     JsonWriter.write(CatPerson(Person("a", "b"), Cat("Garfield", "chips"))) shouldBe """{"person":{"name": "a", "email": "b"},"cat":{"name": "Garfield", "food": "chips"}}"""
   }
 
-  markup {"""
+  markup {
+    """
 Type enrichment
 =========
 With implicit class, you can magically add methods to any Type
@@ -146,16 +159,21 @@ in `String` type, but it will try to find an implicit class which has a `numberO
 if it can find one. Here compiler found `ExtraStringMethods`, then it will implicitly create
 an instance of `ExtraStringMethods` from string "the quick brown fox", so calling `numberOfVowels`
 will just work like it's builtin implemented method of `String` type.
-"""}
-
-  it should "able to use `writeJson` method" in {
-    CatPerson(Person("oyjc", "oyanglulu@gmail.com"), Cat("Hello Kitty", "rainbow")).writeJson shouldBe """{"person":{"name": "oyjc", "email": "oyanglulu@gmail.com"},"cat":{"name": "Hello Kitty", "food": "rainbow"}}"""
+"""
   }
 
-  markup {"""
+  it should "able to use `writeJson` method" in {
+    CatPerson(
+      Person("oyjc", "oyanglulu@gmail.com"),
+      Cat("Hello Kitty", "rainbow")).writeJson shouldBe """{"person":{"name": "oyjc", "email": "oyanglulu@gmail.com"},"cat":{"name": "Hello Kitty", "food": "rainbow"}}"""
+  }
+
+  markup {
+    """
 But, it's not generic enough, we still need to implement `Cat.writeJson` and `Person.writeJson`.
 How can we have a generic `writeJson` method which automatically works for all `JsonWrite[_]` type
-"""}
+"""
+  }
 
   "Cat and Person" should "also be able to use `writeJson` without any changes" in {
     import JsonWriter.Ops
