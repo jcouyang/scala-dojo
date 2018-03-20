@@ -27,4 +27,5 @@ Basically just make the following tests compile and all green...
 
 1. [[https://github.com/jcouyang/essential-scala-dojo/blob/master/src/test/scala/ObjectAndClassSpec.scala][Class and Object]]
 2. [[https://github.com/jcouyang/essential-scala-dojo/blob/master/src/test/scala/TypeclassSpec.scala][Type classes]]
+3. [[https://github.com/jcouyang/essential-scala-dojo/blob/master/src/test/scala/MonadSpec.scala][Monad]]
 
