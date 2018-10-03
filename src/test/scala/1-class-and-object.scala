@@ -7,7 +7,7 @@ class `1.ClassAndObject` extends FlatSpec with Matchers {
     """
 This is just a warm up excercise, which verify your compiler, sbt and IDE is working fine.
 
-Try implement `Person` and `ChipShop` in `ClassAndObject` and run `sbt testOnly *ClassAndObjectSpec`
+Try implement `Person` and `ChipShop` in `ClassAndObject` and run `sbt testOnly *ClassAndObject`
 """
   }
 
