@@ -40,8 +40,8 @@ Basically just make the following tests compile and all green...
 3-2-identity-monad.scala
 3-3-reader-writer-monad.scala
 3-4-state-monad.scala
+3-5-monad-transformer.scala
 3-6-semigroupal.scala
 3-7-validated.scala
 3-8-traverse.scala
-3.5-monad-transformer.scala
 #+END_EXAMPLE
