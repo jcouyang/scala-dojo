@@ -21,15 +21,27 @@ sbt
 
 Then type =compile= and wait all deps download and everything should compile.
 
-If everything compiled, try typing in `test` command
+If everything compiled, try typing in =test= command
 
 ** Challenges
 
-All the exercises are well documented and defined in =*Spec= files under =test= folder.
+All the exercises are well documented and defined in [[https://github.com/jcouyang/scala-dojo/tree/master/src/test/scala][files under =test= folder]].
 
 Basically just make the following tests compile and all green...
 
-1. [[https://github.com/jcouyang/essential-scala-dojo/blob/master/src/test/scala/ObjectAndClassSpec.scala][Class and Object]]
-2. [[https://github.com/jcouyang/essential-scala-dojo/blob/master/src/test/scala/TypeclassSpec.scala][Type classes]]
-3. [[https://github.com/jcouyang/essential-scala-dojo/blob/master/src/test/scala/MonadSpec.scala][Monad]]
-
+#+BEGIN_EXAMPLE
+1-class-and-object.scala
+2-1-algebraic-data-type.scala
+2-2-recursive-data-type.scala
+2-3-variance.scala
+2-4-typeclasses.scala
+2-5-type-enrichment.scala
+3-1-functor.scala
+3-2-identity-monad.scala
+3-3-reader-writer-monad.scala
+3-4-state-monad.scala
+3-6-semigroupal.scala
+3-7-validated.scala
+3-8-traverse.scala
+3.5-monad-transformer.scala
+#+END_EXAMPLE
