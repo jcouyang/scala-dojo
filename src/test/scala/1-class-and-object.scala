@@ -2,7 +2,7 @@ package classandobject
 
 import org.scalatest._
 
-class ClassAndObjectSpec extends FlatSpec with Matchers {
+class `1.ClassAndObject` extends FlatSpec with Matchers {
   markup {
     """
 This is just a warm up excercise, which verify your compiler, sbt and IDE is working fine.
