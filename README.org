@@ -45,3 +45,6 @@ Basically just make the following tests compile and all green...
 3-7-validated.scala
 3-8-traverse.scala
 #+END_EXAMPLE
+
+** Typeclasses Coverage
+[[https://user-images.githubusercontent.com/1235045/46420398-4b1a9580-c773-11e8-8dd7-bf1c7335f8f7.PNG]]
