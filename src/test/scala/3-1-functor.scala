@@ -55,5 +55,6 @@ and you can convert B to A with function `B => A`, than you can say that B is al
 
   it should "print anything that can be converted to string or int" in {
     Printable.format(Box("hill")) shouldBe "\"hill\""
+    Printable.format(Box(true)) shouldBe "yes"
   }
 }
