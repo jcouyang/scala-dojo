@@ -48,3 +48,7 @@ Basically just make the following tests compile and all green...
 
 ** Typeclasses Coverage
 [[https://user-images.githubusercontent.com/1235045/46420398-4b1a9580-c773-11e8-8dd7-bf1c7335f8f7.PNG]]
+
+
+** More Challenges
+- [Shapeless](http://benhutchison.com/learningshapeless/slides/)
