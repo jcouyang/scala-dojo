@@ -51,4 +51,4 @@ Basically just make the following tests compile and all green...
 
 
 ** More Challenges
-- [Shapeless](http://benhutchison.com/learningshapeless/slides/)
+- [[http://benhutchison.com/learningshapeless/slides/][Type-level Programming with Shapeless by Ben Hutchison]]
