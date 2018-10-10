@@ -49,6 +49,8 @@ which means, if you have B=>A function and a F[A], you can get a F[B]
 
 If it's hard to understand why we need a contramap, think about if type A is printable,
 and you can convert B to A with function `B => A`, than you can say that B is also printable.
+
+Now please implement `boxPrintable` using `contracmap` and the next spec shall pass.
 """
   }
   behavior of "Printable"

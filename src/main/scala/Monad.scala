@@ -1,5 +1,7 @@
 package monad
 
+import cats._
+
 import cats.Apply
 import cats.data.Validated
 import cats.data.Validated.Valid
@@ -66,11 +68,24 @@ object Printable {
       if (value) "yes" else "no"
   }
 
-  implicit def boxPrintable[A](implicit p: Printable[A]): Printable[Box[A]] =
-    Contravariant[Printable].contramap(p)((box: Box[A]) => box.value)
+  // implicit def boxPrintable[A](implicit p: Printable[A]): Printable[Box[A]] =
+  //   Contravariant[Printable].contramap(p)((box: Box[A]) => box.value)
+
+  implicit def fToId: Box ~> Id = Lambda[Box ~> Id](_.value)
+
+  implicit val sphereToBox: Sphere ~> Box =
+    Lambda[Sphere ~> Box](s => Box(s.value))
+
+  implicit def spherePrintable[F[_], G[_], A](implicit p: Printable[F[A]],
+                                              fnk: (G ~> F)): Printable[G[A]] =
+    Contravariant[Printable].contramap(p)(fnk.apply)
+
+  implicitly[Printable[String]]
 }
 
 final case class Box[A](value: A)
+
+case class Sphere[A](value: A)
 
 object IdMonad {
   def sumSquare[F[_]: Monad](a: F[Int], b: F[Int]): F[Int] =
