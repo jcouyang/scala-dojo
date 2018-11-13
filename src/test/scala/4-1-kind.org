@@ -1,0 +1,78 @@
+#+TITLE: Kind
+#+AUTHOR: Jichao Ouyang
+
+* Kind
+  :PROPERTIES:
+  :header-args:    :tangle yes :exports none
+  :END:
+
+#+BEGIN_SRC scala
+  package free
+  import monad._
+  import org.scalatest._
+
+  class `4-1-Kind` extends AsyncFlatSpec with Matchers {
+#+END_SRC
+
+Kinds are types for types. Like a function for parameters of type and return a type.
+e.g. `List[_]` is a Kind, it has a `hole` represented as `_` in it, which is like paramter in function.
+if you fill the hole with a type `String`, than you will get a type `List[String]`.
+
+recall our `Printable[_]` kind defined in `3.1.Functor`, we've create implement of typeclass `Contravariant`
+over kind `Printable`, which means no matter what type you fill into the hole of `Printable[_]`, it should
+fullfill the constrain of typeclass `Contravariant`.
+
+You can also define a function over Kind `F[_] -> G[_]`, which is called ~~FunctionK~~ , just like function over type.
+
+
+** FunctionK
+
+to define a FuntionK in cats, we can simply using fish arrow `~>`
+
+e.g. a FuntionK from `List` to `Option`
+
+#+BEGIN_SRC scala :exports code :tangle no
+import cats.~>
+val first = new (List ~> Option) {
+  def apply[A](l:List[A]): Option[A] = l.headOption
+}
+#+END_SRC
+
+** Kind Projector
+
+you'll notice that we've include a compiler plugin `kind-projector` in `build.sbt`
+
+it provides us pretty syntactic suger for such case
+
+#+BEGIN_SRC scala :exports code :tangle no
+val first = Lambda[List ~> Option](_.headOption)
+#+END_SRC
+
+which will expand to exactly the same code like what we defined before.
+
+#+BEGIN_SRC scala
+  behavior of "FunctionK"
+  it should "create a FunctionK from `Box[_]` to `Sphere[_]`" in {
+    Printable.format(Sphere("hill")) shouldBe "\"hill\""
+  }
+#+END_SRC
+
+** Rank N Type
+
+But why this is useful than function, the `fnk` in `spherePrintable` can be easily replace with a simple function
+and it should behave still the same with no doubt.
+
+#+BEGIN_SRC scala :exports none :tangle no
+implicit def spherePrintable[A](implicit p: Printable[Box[A]],
+                                fn: Sphere[A] => Box[A]): Printable[Sphere[A]] = ???
+#+END_SRC
+
+If your kinds are happend to be Functor, than this functionK becomes ~~Natural Transformation~~
+
+** Natural Transformation
+
+
+
+#+BEGIN_SRC scala
+}
+#+END_SRC
