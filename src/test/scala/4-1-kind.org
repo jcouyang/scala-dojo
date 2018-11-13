@@ -1,6 +1,3 @@
-#+TITLE: Kind
-#+AUTHOR: Jichao Ouyang
-
 * Kind
   :PROPERTIES:
   :header-args:    :tangle yes :exports none
@@ -9,25 +6,26 @@
 #+BEGIN_SRC scala
   package free
   import monad._
+  import cats._
   import org.scalatest._
 
   class `4-1-Kind` extends AsyncFlatSpec with Matchers {
 #+END_SRC
 
 Kinds are types for types. Like a function for parameters of type and return a type.
-e.g. =List[_]= is a Kind, it has a =hole= represented as =_= in it, which is like paramter in function.
-if you fill the hole with a type =String=, than you will get a type =List[String]=.
+e.g. =List[_]= is a Kind, it has a =hole= represented as =_= in it, which is like parameter in function.
+If you fill the hole with a type =String=, then you will get a type =List[String]=.
 
-recall our =Printable[_]= kind defined in =3.1.Functor=, we've create implement of typeclass =Contravariant=
+Recall our =Printable[_]= kind defined in =3.1.Functor=, we'vecreatede implement of typeclass =Contravariant=
 over kind =Printable=, which means no matter what type you fill into the hole of =Printable[_]=, it should
-fullfill the constrain of typeclass =Contravariant=.
+fulfill constrain of typeclass =Contravariant=.
 
 You can also define a function over Kind =F[_] -> G[_]=, which is called /FunctionK/ , just like function over type.
 
 
 ** FunctionK
 
-to define a FuntionK in cats, we can simply using fish arrow =~>=
+to define a FuntionK in cats, we can simply use fish arrow =~>=
 
 e.g. a FuntionK from =List= to =Option=
 
@@ -96,13 +94,12 @@ you will get some compile error as such
 [error]                                   ^
 #+END_EXAMPLE
 
-apparently when your =fn= stick to a =C= type, it's not convertable to neither A nor B type, even if you stick it
+Apparently when your =fn= stick to a =C= type, it's not convertible to neither A nor B type, even if you stick it
 to =A= type, then the =tupleOfSphere._2= can't convert to =A= either.
 
-so this is call /Rank 1 Type/, because all types are fixed in the same rank in =tuplePrintable=
+So this is call /Rank 1 Type/, because all types A, B, C are fixed in the same rank of =tuplePrintable='s polymorphism.
 
-to make such code compile, you'll need to make =fn= as =Rank 2 Type=, which means =fn= will not be in the first
-rank of =tuplePrintable=, it's type parameter will be in another rank
+To make such code compile, you'll need to make =fn= as =Rank 2 Type=, which means =fn= will not be fixed in the first rank of =tuplePrintable= polymorphism, it's type polymorphism will be in another rank totally independent from the =tuplePrintable=
 
 #+BEGIN_SRC scala
   behavior of "Rank N Type"
@@ -111,11 +108,26 @@ rank of =tuplePrintable=, it's type parameter will be in another rank
   }
 #+END_SRC
 
-If your kinds are happend to be Functor, than this functionK becomes /Natural Transformation/
-
 ** Natural Transformation
 
+If your kinds are happen to be Functor, than this functionK becomes /Natural Transformation/
 
+There's nothing different except Natural Transformation will provide you a property:
+
+apply FunctionK before or after a Functor =map= makes no difference
+
+hence =fnk(fa.map(f))= is exactly the same as =fnk(fa).map(f)=
+
+#+BEGIN_SRC scala
+  "Natural Transformation" should "satisfy law" in {
+    implicit val functorBox: Functor[Box] = new Functor[Box] {
+      def map[A, B](fa: Box[A])(f: A => B) =
+        Box(f(fa.value))
+    }
+    import cats.syntax.functor._
+    Sphere.sphereToBox(Sphere(100).map(_ + 1)) shouldBe Sphere.sphereToBox(Sphere(100)).map(_ + 1)
+  }
+#+END_SRC
 
 #+BEGIN_SRC scala
 }

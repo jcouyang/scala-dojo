@@ -23,4 +23,9 @@ object Sphere {
     }
     Contravariant[Printable].contramap(p)(tupleOfSphereToBox)
   }
+
+  implicit val functorSphere: Functor[Sphere] = new Functor[Sphere] {
+    def map[A, B](fa: Sphere[A])(f: A => B) =
+      Sphere(f(fa.value))
+  }
 }
