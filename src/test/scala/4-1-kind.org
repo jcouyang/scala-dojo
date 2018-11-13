@@ -11,7 +11,7 @@
   import monad._
   import org.scalatest._
 
-  class =4-1-Kind= extends AsyncFlatSpec with Matchers {
+  class `4-1-Kind` extends AsyncFlatSpec with Matchers {
 #+END_SRC
 
 Kinds are types for types. Like a function for parameters of type and return a type.
@@ -65,6 +65,50 @@ and it should behave still the same with no doubt.
 #+BEGIN_SRC scala :exports none :tangle no
 implicit def spherePrintable[A](implicit p: Printable[Box[A]],
                                 fn: Sphere[A] => Box[A]): Printable[Sphere[A]] = ???
+#+END_SRC
+
+let's create another function that use =Sphere ~> Box=, to make tuple of sphere =(Sphere[String], Sphere[Int])= printable
+
+#+BEGIN_SRC scala :tangle no
+implicit def tuplePrintable[A, B, C](
+      implicit p: Printable[Box[String]],
+      fn: Sphere[C] => Box[C])): Printable[(Sphere[A], Sphere[B])] = {
+    val tupleOfSphereToBox = (tupleOfSphere: (Sphere[A], Sphere[B])) => {
+      val box1 = fn(tupleOfSphere._1)
+      val box2 = fn(tupleOfSphere._2)
+      Box(s"(${box1.value}, ${box2.value})")
+    }
+    Contravariant[Printable].contramap(p)(tupleOfSphereToBox)
+  }
+#+END_SRC
+
+you will get some compile error as such
+#+BEGIN_EXAMPLE
+[error] /Users/jichao.ouyang/Develop/scala-dojo/src/main/scala/Free.scala:21:35: type mismatch;
+[error]  found   : free.Sphere[A]
+[error]  required: free.Sphere[C]
+[error]       val box1 = fn(tupleOfSphere._1)
+[error]                                   ^
+[error] /Users/jichao.ouyang/Develop/scala-dojo/src/main/scala/Free.scala:22:35: type mismatch;
+[error]  found   : free.Sphere[B]
+[error]  required: free.Sphere[C]
+[error]       val box2 = fn(tupleOfSphere._2)
+[error]                                   ^
+#+END_EXAMPLE
+
+apparently when your =fn= stick to a =C= type, it's not convertable to neither A nor B type, even if you stick it
+to =A= type, then the =tupleOfSphere._2= can't convert to =A= either.
+
+so this is call /Rank 1 Type/, because all types are fixed in the same rank in =tuplePrintable=
+
+to make such code compile, you'll need to make =fn= as =Rank 2 Type=, which means =fn= will not be in the first
+rank of =tuplePrintable=, it's type parameter will be in another rank
+
+#+BEGIN_SRC scala
+  behavior of "Rank N Type"
+  it should "able to print a tuple of Sphere" in {
+    Printable.format((Sphere("hill"), Sphere(1))) shouldBe "\"(hill, 1)\""
+  }
 #+END_SRC
 
 If your kinds are happend to be Functor, than this functionK becomes /Natural Transformation/
