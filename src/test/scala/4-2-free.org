@@ -1,4 +1,4 @@
-* Kind
+* Free
   :PROPERTIES:
   :header-args:    :tangle yes :exports none
   :END:
@@ -13,3 +13,62 @@
 #+END_SRC
 
 /Free Monad/ means you can get a **free** monad from any =Functor=
+
+** Free Structure
+A Free Structure is basically very similar to =Cons= and =Nil= of
+=List=, we can called such similarity /Isomorphic/
+
+#+BEGIN_SRC scala
+  seal trait Free[S[_], A]
+  final case class Pure[S[_], A](a: A) extends Free[S, A]
+  final case class Suspend[S[_], A](a: S[A]) extends Free[S, A]
+#+END_SRC
+
+=Pure= is like =Nil= representing the end of structure, and =Suspend=
+to =Cons= means there is something else left behide.
+
+to make it a Monad, which could be something like
+#+BEGIN_SRC scala
+  implicit def catsFreeMonadForFree[S[_]](implicit F:Functor[S]): Monad[Free[S, ?]] =
+    new Monad[Free[S, ?]] {
+      def pure[A](a: A): Free[S, A] = Pure(a)
+      def map[A, B](fa: Free[S, A])(f: A => B): Free[S, B] = fa.flatMap(a=>Pure(f(a)))
+      def flatMap[A, B](a: Free[S, A])(f: A => Free[S, B]): Free[S, B] = a match {
+        case Pure(a) => f(a)
+        case Suspend(a) => Suspend(F.map(a)(next=>next.flatMap(f)))
+      }
+    }
+#+END_SRC
+
+while you probably noticed that we need =S= to be a =Functor= first so we can
+=map= it's next step and continuise =flatMap=
+
+** CoYoneda Lemma (Trick)
+Now the problem become "how can we get a free functor from any =S[_]=?"
+
+=CoYoneda[F, A]= consists of two things
+
+- a function =B => A=
+- a =F[B]=
+
+#+BEGIN_SRC scala
+    case class CoYoneda[F[_], A, B](fb: F[B], f: B => A)
+#+END_SRC
+
+#+BEGIN_SRC scala
+  implicit def functorForCoyoneda = new Functor[CoYoneda[F, ?, B]] {
+    def map[A, C](fa:CoYoneda[F, A, B])(f: A=>C): CoYoneda[F, C, B] {
+      CoYoneda(fa.fb, (f compose fa.f))
+    }
+  }
+#+END_SRC
+
+Now we know how to map over a =CoYoneda=, but how can we get a =CoYoneda=
+from any =F[_]=
+
+That would be /CoYoneda Lemma/(Trick)
+
+#+BEGIN_SRC scala
+  def lift[F[_], A](fa: F[A]):CoYoneda[F, A, A] =
+    CoYoneda(fa, identity:A=>A)
+#+END_SRC
