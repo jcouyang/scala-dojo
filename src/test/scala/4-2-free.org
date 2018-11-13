@@ -1,0 +1,15 @@
+* Kind
+  :PROPERTIES:
+  :header-args:    :tangle yes :exports none
+  :END:
+
+#+BEGIN_SRC scala
+  package free
+  import monad._
+  import cats._
+  import org.scalatest._
+
+  class `4-2-Free` extends AsyncFlatSpec with Matchers {
+#+END_SRC
+
+/Free Monad/ means you can get a **free** monad from any =Functor=
