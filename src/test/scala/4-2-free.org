@@ -18,17 +18,17 @@
 A Free Structure is basically very similar to =Cons= and =Nil= of
 =List=, we can called such similarity /Isomorphic/
 
-#+BEGIN_SRC scala
+#+BEGIN_SRC scala :tangle no :exports code
   seal trait Free[S[_], A]
   final case class Pure[S[_], A](a: A) extends Free[S, A]
   final case class Suspend[S[_], A](a: S[A]) extends Free[S, A]
 #+END_SRC
 
 =Pure= is like =Nil= representing the end of structure, and =Suspend=
-to =Cons= means there is something else left behide.
+to =Cons= means there is something else left behind.
 
 to make it a Monad, which could be something like
-#+BEGIN_SRC scala
+#+BEGIN_SRC scala :tangle no :exports code
   implicit def catsFreeMonadForFree[S[_]](implicit F:Functor[S]): Monad[Free[S, ?]] =
     new Monad[Free[S, ?]] {
       def pure[A](a: A): Free[S, A] = Pure(a)
@@ -44,18 +44,22 @@ while you probably noticed that we need =S= to be a =Functor= first so we can
 =map= it's next step and continuise =flatMap=
 
 ** CoYoneda Lemma (Trick)
-Now the problem become "how can we get a free functor from any =S[_]=?"
+The problem become "how can we get a free functor from any =S[_]=?" then
 
-=CoYoneda[F, A]= consists of two things
+this is when we need to introduce /CoYoneda Lemma/
+
+a =CoYoneda[F[_], A]= consists of two things
 
 - a function =B => A=
 - a =F[B]=
 
-#+BEGIN_SRC scala
+since =B= share the same polymorphism of =A= and =F=, they are in the same rank[fn:1], so we
+can add =B= into the type parameter of =CoYoneda= as well, which become =CoYoneda[F[_], A, B]=
+#+BEGIN_SRC scala  :tangle no :exports code
     case class CoYoneda[F[_], A, B](fb: F[B], f: B => A)
 #+END_SRC
 
-#+BEGIN_SRC scala
+#+BEGIN_SRC scala :tangle no :exports code
   implicit def functorForCoyoneda = new Functor[CoYoneda[F, ?, B]] {
     def map[A, C](fa:CoYoneda[F, A, B])(f: A=>C): CoYoneda[F, C, B] {
       CoYoneda(fa.fb, (f compose fa.f))
@@ -68,7 +72,35 @@ from any =F[_]=
 
 That would be /CoYoneda Lemma/(Trick)
 
-#+BEGIN_SRC scala
+The trick is to use the =identity= function, which will turn =B= into =A=, so any =F[_]= can be converted to
+=CoYoneda[F, A, A]=, and eventually become a Functor
+
+#+BEGIN_SRC scala :tangle no :exports code
   def lift[F[_], A](fa: F[A]):CoYoneda[F, A, A] =
     CoYoneda(fa, identity:A=>A)
 #+END_SRC
+
+So to construct a Free Monad, we can use the CoYoneda Trick to lift any =F[_]=
+
+#+BEGIN_SRC scala :tangle no :exports code
+  def liftF[F[_], A](value: F[A]): Free[F, A] = Suspend(lift(value))
+#+END_SRC
+
+** Effects
+Let's forget about CoYoneda[fn:2], I'll gonna show you how easy to use Free to free your ADT and get a free
+then, seperate your effect from the core logic.
+
+imagine we have a document database to query, it's easy to abstract 3 method on it:
+
+- `get(key: String)`
+- `put(key: String, value: String)`
+- `delete(key: String)`
+
+all of these actions are actually effects, because they will cause the state changes outside the scope where the method is executed.
+
+while testing those methods could be a nightmare as well, you have to either setup *
+a Footnotes
+
+[fn:2] it's totally find if you did follow, you don't actually need to understand how Free is implemented to use it.
+
+[fn:1] hope you still remember what "rank" is from 4-1-kind
