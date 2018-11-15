@@ -29,3 +29,59 @@ object Sphere {
       Sphere(f(fa.value))
   }
 }
+
+object Database {
+  def get(key: String): String = {
+    println("querying database")
+    s"value for key $key"
+  }
+
+  def put(key: String, value: String) ={
+    println(s"saving $key to database")
+  }
+
+  def delete(key: String) = {
+    println(s"deleteing $key")
+  }
+}
+
+object program {
+  def apply() = {
+    val oldKey = "123"
+    val oldVal = Database.get(oldKey)
+    val newVal = s"this is new: $oldVal"
+    val newKey = oldKey.reverse
+    Database.put(newKey, newVal)
+    Database.delete(oldKey)
+  }
+}
+
+sealed trait DbEff[A]
+case class Put(key: String, val: String) extends DbEff[Unit]
+case class Get(key: String) extends DbEff[String]
+case class Delete(key: String) extends DbEff[Unit]
+
+object DbEff {
+  def get(key: String): Free[DbEff, String] = Free.liftF[DbEff, String](Get(key))
+  def put(key: String, v: String): Free[DbEff, Unit] = Free.liftF[DbEff, String](Put(key, v))
+  def delete(key: String): Free[DbEff, Unit] = Free.liftF[DbEff, String](Delete(key))
+}
+
+object freeProgram {
+  val oldKey = "123"
+  def apply() = for {
+    oldVal <- DbEff.get(oldKey)
+    newVal = s"this is new: $oldVal"
+    newKey <- oldKey.reverse
+    _ <- DbEff.put(newKey, newVal)
+    _ <- DbEff.delete(oldKey)
+  } yield ()
+}
+
+object DbEffInterp {
+  val fake = Lambda[DbEff ~> IO](_ match {
+    case Get(key) => IO(s"value for key $key")
+    case Put(key, v) => IO(println(s"saving $key to database"))
+    case Delete(key) => IO(println(s"deleteing $key"))
+  })
+}
