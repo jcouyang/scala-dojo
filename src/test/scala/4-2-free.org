@@ -15,7 +15,7 @@
 
 ** Free Structure
 A Free Structure is basically very similar to =Cons= and =Nil= of
-=List=, we can called such similarity /Isomorphic/
+=List=, we can call such similarity /Isomorphic/
 
 #+BEGIN_SRC scala
   seal trait Free[S[_], A]
@@ -26,7 +26,7 @@ A Free Structure is basically very similar to =Cons= and =Nil= of
 =Pure= is like =Nil= representing the end of structure, and =Suspend=
 to =Cons= means there is something else left behind.
 
-to make it a Monad, which could be something like
+To make it a Monad, which could be something like
 #+BEGIN_SRC scala
   implicit def catsFreeMonadForFree[S[_]](implicit F:Functor[S]): Monad[Free[S, ?]] =
     new Monad[Free[S, ?]] {
@@ -39,8 +39,8 @@ to make it a Monad, which could be something like
     }
 #+END_SRC
 
-while you probably noticed that we need =S= to be a =Functor= first so we can
-=map= it's next step and continuise =flatMap=
+while you probably noticed that we need =S= to be a =Functor= first, so we can
+=map= it's next step and continuous =flatMap=
 
 ** CoYoneda Lemma (Trick)
 The problem become "how can we get a free functor from any =S[_]=?" then
@@ -86,7 +86,7 @@ So to construct a Free Monad, we can use the CoYoneda Trick to lift any =F[_]=
 #+END_SRC
 
 ** Effects
-Let's forget about CoYoneda[fn:2] for now, I'll gonna show you how easy to use cat's Free to free your ADT and get a free program
+Let's forget about CoYoneda[fn:2] for now, I'm gonna show you how easy to use cat's Free to free your ADT and get a free program
 then, separate your effect from the core logic.
 
 Imagine we have a document database to query, it's easy to abstract 3 method on it:
@@ -114,7 +114,7 @@ object Database {
 
 All of these actions are actually effects, because they will potentially cause some state changes outside the scope where the method is executed.
 
-While testing those methods could be a nightmare as well, you have to either setup a real database or mock these method's implementation
+While testing those methods could be a nightmare as well, you have to either setup a real database or mock these methods' implementation
 
 #+BEGIN_SRC scala :tangle yes :exports none
 behavior of "program"
@@ -123,13 +123,13 @@ it should "hard to unit test get put delete" in {
 }
 #+END_SRC
 
-you will find it's too hard to mock a =object=, so the test could end up with a integration test which require real database, or refactor =Database= to a normal class so you can mock it properly.
+You will find it's too hard to mock a =object=, so the test could end up with a integration test which require real database, or refactor =Database= to a normal class so you can mock it properly.
 
-it's hard to test because:
+It's hard to test because:
 - imperative: when you call the method, the effect actually happen
 - stateful: the effect and result depends on database, which is out of the scope of =Database=
 
-To make your program more declaritive and testable, we can describe all database interactions using ADT
+To make your program more declarative and testable, we can describe all database interactions using ADT
 
 #+BEGIN_SRC scala
 sealed trait DbEff[A]
@@ -144,7 +144,7 @@ no database interaction will actually happen when you construct those ADTs
 
 ** Free your program
 
-to lift those ADTs into Free, simply using =liftF= we've introduce in [[*CoYoneda Lemma (Trick)]]
+to lift those ADTs into Free, simply using =liftF= [fn:4] we've introduced in [[*CoYoneda Lemma (Trick)]]
 
 #+BEGIN_SRC scala
 object DbEff {
@@ -173,7 +173,7 @@ object program {                         object freeProgram {
 
 ** Interpret your program
 
-since our program is organized, we can define a interpreter just for test, without actually talk to db, but
+Since our program is organized, we can define an interpreter just for test, without actually talk to database, but
 simulating the interactions between your program and database. [fn:3]
 
 #+BEGIN_SRC scala :tangle yes :exports none
@@ -187,7 +187,7 @@ object DbEffInterp {
 }
 #+END_SRC
 
-so if you run your program over the interpreter
+So, if you run your program over the interpreter
 
 #+BEGIN_SRC scala :tangle yes :exports none
   behavior of "free program"
@@ -205,6 +205,8 @@ a nice message will tell you when =sbt "testOnly *Free"=
 you'll know what to fix, seems we have some business bug in =freeProgram=
 
 * Footnotes
+
+[fn:4] here we're using cats free implementation, which already have CoYoneda embedded in =Free= implementation, so we don't need to =lift= the value to =CoYoneda= our self.
 
 [fn:3] remember the =Lambda= trick from [[file:4-1-kind.org::*Kind Projector]] ?
 
