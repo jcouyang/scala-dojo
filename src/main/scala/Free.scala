@@ -1,7 +1,8 @@
 package free
-import cats.functor.Contravariant
+import cats.Contravariant
 import monad.{Box, Printable}
 import cats._
+import cats.free.Free
 
 case class Sphere[A](value: A)
 
@@ -36,7 +37,7 @@ object Database {
     s"value for key $key"
   }
 
-  def put(key: String, value: String) ={
+  def put(key: String, value: String) = {
     println(s"saving $key to database")
   }
 
@@ -57,31 +58,27 @@ object program {
 }
 
 sealed trait DbEff[A]
-case class Put(key: String, val: String) extends DbEff[Unit]
+case class Put(key: String, value: String) extends DbEff[Unit]
 case class Get(key: String) extends DbEff[String]
 case class Delete(key: String) extends DbEff[Unit]
 
 object DbEff {
-  def get(key: String): Free[DbEff, String] = Free.liftF[DbEff, String](Get(key))
-  def put(key: String, v: String): Free[DbEff, Unit] = Free.liftF[DbEff, String](Put(key, v))
-  def delete(key: String): Free[DbEff, Unit] = Free.liftF[DbEff, String](Delete(key))
+  def get(key: String): Free[DbEff, String] =
+    Free.liftF[DbEff, String](Get(key))
+  def put(key: String, v: String): Free[DbEff, Unit] =
+    Free.liftF[DbEff, Unit](Put(key, v))
+  def delete(key: String): Free[DbEff, Unit] =
+    Free.liftF[DbEff, Unit](Delete(key))
 }
 
 object freeProgram {
   val oldKey = "123"
-  def apply() = for {
-    oldVal <- DbEff.get(oldKey)
-    newVal = s"this is new: $oldVal"
-    newKey <- oldKey.reverse
-    _ <- DbEff.put(newKey, newVal)
-    _ <- DbEff.delete(oldKey)
-  } yield ()
-}
-
-object DbEffInterp {
-  val fake = Lambda[DbEff ~> IO](_ match {
-    case Get(key) => IO(s"value for key $key")
-    case Put(key, v) => IO(println(s"saving $key to database"))
-    case Delete(key) => IO(println(s"deleteing $key"))
-  })
+  def apply() =
+    for {
+      oldVal <- DbEff.get(oldKey)
+      newVal = s"this is new: $oldVal"
+      newKey = oldKey.reverse
+      _ <- DbEff.put(newKey, newVal)
+      _ <- DbEff.delete(newKey)
+    } yield ()
 }

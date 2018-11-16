@@ -9,7 +9,7 @@ import scala.concurrent.duration._
 
 import cats.{Functor, Monad}
 import cats.data.{EitherT, Reader, Validated, Writer}
-import cats.functor.Contravariant
+import cats.Contravariant
 import cats.instances.future._
 import cats.instances.list._
 import cats.instances.vector._

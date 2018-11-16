@@ -5,10 +5,9 @@
 
 #+BEGIN_SRC scala :tangle yes :exports none
   package free
-  import monad._
-  import cats._
   import org.scalatest._
-
+  import cats._
+  import cats.effect.IO
   class `4-2-Free` extends AsyncFlatSpec with Matchers {
 #+END_SRC
 
@@ -120,7 +119,7 @@ While testing those methods could be a nightmare as well, you have to either set
 #+BEGIN_SRC scala :tangle yes :exports none
 behavior of "program"
 it should "hard to unit test get put delete" in {
-  program() shouldBe ()
+  program() shouldBe (())
 }
 #+END_SRC
 
@@ -134,17 +133,18 @@ To make your program more declaritive and testable, we can describe all database
 
 #+BEGIN_SRC scala
 sealed trait DbEff[A]
-case class Put(key: String, val: String) extends DbEff[Unit]
+case class Put(key: String, value: String) extends DbEff[Unit]
 case class Get(key: String) extends DbEff[String]
 case class Delete(key: String) extends DbEff[Unit]
 #+END_SRC
 
-All these ADTs is just decribing what kind of behavior a database can provide, and what value they should return.
+All these ADTs is just describing what kind of behavior a database can provide, and what value they should return.
 
 no database interaction will actually happen when you construct those ADTs
 
 ** Free your program
-to lift those ADTs into Free, simply using =liftF= we've introduce in [[CoYoneda Lemma (Trick)]]
+
+to lift those ADTs into Free, simply using =liftF= we've introduce in [[*CoYoneda Lemma (Trick)]]
 
 #+BEGIN_SRC scala
 object DbEff {
@@ -156,16 +156,57 @@ object DbEff {
 
 =put= and =delete= should be pretty much the same
 
-to lift your =program= defined before to free, the simple trick all ~=~ to =<-= and remove
+to lift your =program= defined before to free, the simple trick is to change all ~=~ to =<-= and remove =val=
+
+#+BEGIN_SRC scala
+object program {                         object freeProgram {
+  def apply() = {                          val oldKey = "123"
+    val oldKey = "123"                     def apply() = for {
+    val oldVal = Database.get(oldKey)        oldVal <- DbEff.get(oldKey)
+    val newVal = s"this is new: $oldVal"     newVal = s"this is new: $oldVal"
+    val newKey = oldKey.reverse              newKey = oldKey.reverse
+    Database.put(newKey, newVal)             _ <- DbEff.put(newKey, newVal)
+    Database.delete(oldKey)                  _ <- DbEff.delete(oldKey)
+  }                                        } yield ()
+}                                        }
+#+END_SRC
+
+** Interpret your program
+
+since our program is organized, we can define a interpreter just for test, without actually talk to db, but
+simulating the interactions between your program and database. [fn:3]
+
 #+BEGIN_SRC scala :tangle yes :exports none
-behavior of "free program"
-it should "run on fake interpreter to verify your program logic" in {
-  ((freeProgram() foldMap DbEffInterp.fake) unsafeRunSync () shouldBe ()
+object DbEffInterp {
+  val fake = Lambda[DbEff ~> IO](_ match {
+    case Get("123")    => IO(s"value for key 123")
+    case Put("321", v) => IO(println(s"saving 123 to database"))
+    case Delete("123") => IO(println(s"deleteing 123"))
+    case a => IO(fail(s"unexpecting interaction: $a"))
+  })
 }
 #+END_SRC
 
+so if you run your program over the interpreter
+
+#+BEGIN_SRC scala :tangle yes :exports none
+  behavior of "free program"
+  it should "run on fake interpreter to verify your program logic" in {
+    (freeProgram() foldMap DbEffInterp.fake) unsafeRunSync () shouldBe (())
+  }
+#+END_SRC
+
+a nice message will tell you when =sbt "testOnly *Free"=
+#+BEGIN_EXAMPLE
+[info] - should run on fake interpreter to verify your program logic *** FAILED ***
+[info]   unexpecting interaction: Delete(321) (4-2-free.scala:17)
+#+END_EXAMPLE
+
+you'll know what to fix, seems we have some business bug in =freeProgram=
 
 * Footnotes
+
+[fn:3] remember the =Lambda= trick from [[file:4-1-kind.org::*Kind Projector]] ?
 
 [fn:2] it's totally fine if you didn't follow, you don't actually need to understand how Free is implemented to use it.
 
