@@ -79,6 +79,6 @@ object freeProgram {
       newVal = s"this is new: $oldVal"
       newKey = oldKey.reverse
       _ <- DbEff.put(newKey, newVal)
-      _ <- DbEff.delete(newKey)
+      _ <- DbEff.delete(oldKey)
     } yield ()
 }
