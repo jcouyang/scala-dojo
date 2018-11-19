@@ -1,0 +1,134 @@
+* Kind
+  :PROPERTIES:
+  :header-args:    :tangle yes :exports none
+  :END:
+
+#+BEGIN_SRC scala
+  package free
+  import monad._
+  import cats._
+  import org.scalatest._
+
+  class `4-1-Kind` extends AsyncFlatSpec with Matchers {
+#+END_SRC
+
+Kinds are types for types. Like a function for parameters of type and return a type.
+e.g. =List[_]= is a Kind, it has a =hole= represented as =_= in it, which is like parameter in function.
+If you fill the hole with a type =String=, then you will get a type =List[String]=.
+
+Recall our =Printable[_]= kind defined in =3.1.Functor=, we'vecreatede implement of typeclass =Contravariant=
+over kind =Printable=, which means no matter what type you fill into the hole of =Printable[_]=, it should
+fulfill constrain of typeclass =Contravariant=.
+
+You can also define a function over Kind =F[_] -> G[_]=, which is called /FunctionK/ , just like function over type.
+
+
+** FunctionK
+
+to define a FuntionK in cats, we can simply use fish arrow =~>=
+
+e.g. a FuntionK from =List= to =Option=
+
+#+BEGIN_SRC scala :exports code :tangle no
+import cats.~>
+val first = new (List ~> Option) {
+  def apply[A](l:List[A]): Option[A] = l.headOption
+}
+#+END_SRC
+
+** Kind Projector
+
+you'll notice that we've include a compiler plugin =kind-projector= in =build.sbt=
+
+it provides us pretty syntactic suger for such case
+
+#+BEGIN_SRC scala :exports code :tangle no
+val first = Lambda[List ~> Option](_.headOption)
+#+END_SRC
+
+which will expand to exactly the same code like what we defined before.
+
+#+BEGIN_SRC scala
+  behavior of "FunctionK"
+  it should "create a FunctionK from Box[_] to Sphere[_]" in {
+    Printable.format(Sphere("hill")) shouldBe "\"hill\""
+  }
+#+END_SRC
+
+** Rank N Type
+
+But why this is useful than function, the =fnk= in =spherePrintable= can be easily replace with a simple function
+and it should behave still the same with no doubt.
+
+#+BEGIN_SRC scala :exports none :tangle no
+implicit def spherePrintable[A](implicit p: Printable[Box[A]],
+                                fn: Sphere[A] => Box[A]): Printable[Sphere[A]] = ???
+#+END_SRC
+
+let's create another function that use =Sphere ~> Box=, to make tuple of sphere =(Sphere[String], Sphere[Int])= printable
+
+#+BEGIN_SRC scala :tangle no
+implicit def tuplePrintable[A, B, C](
+      implicit p: Printable[Box[String]],
+      fn: Sphere[C] => Box[C])): Printable[(Sphere[A], Sphere[B])] = {
+    val tupleOfSphereToBox = (tupleOfSphere: (Sphere[A], Sphere[B])) => {
+      val box1 = fn(tupleOfSphere._1)
+      val box2 = fn(tupleOfSphere._2)
+      Box(s"(${box1.value}, ${box2.value})")
+    }
+    Contravariant[Printable].contramap(p)(tupleOfSphereToBox)
+  }
+#+END_SRC
+
+you will get some compile error as such
+#+BEGIN_EXAMPLE
+[error] /Users/jichao.ouyang/Develop/scala-dojo/src/main/scala/Free.scala:21:35: type mismatch;
+[error]  found   : free.Sphere[A]
+[error]  required: free.Sphere[C]
+[error]       val box1 = fn(tupleOfSphere._1)
+[error]                                   ^
+[error] /Users/jichao.ouyang/Develop/scala-dojo/src/main/scala/Free.scala:22:35: type mismatch;
+[error]  found   : free.Sphere[B]
+[error]  required: free.Sphere[C]
+[error]       val box2 = fn(tupleOfSphere._2)
+[error]                                   ^
+#+END_EXAMPLE
+
+Apparently when your =fn= stick to a =C= type, it's not convertible to neither A nor B type, even if you stick it
+to =A= type, then the =tupleOfSphere._2= can't convert to =A= either.
+
+So this is call /Rank 1 Type/, because all types A, B, C are fixed in the same rank of =tuplePrintable='s polymorphism.
+
+To make such code compile, you'll need to make =fn= as =Rank 2 Type=, which means =fn= will not be fixed in the first rank of =tuplePrintable= polymorphism, it's type polymorphism will be in another rank totally independent from the =tuplePrintable=
+
+#+BEGIN_SRC scala
+  behavior of "Rank N Type"
+  it should "able to print a tuple of Sphere" in {
+    Printable.format((Sphere("hill"), Sphere(1))) shouldBe "\"(hill, 1)\""
+  }
+#+END_SRC
+
+** Natural Transformation
+
+If your kinds are happen to be Functor, than this functionK becomes /Natural Transformation/
+
+There's nothing different except Natural Transformation will provide you a property:
+
+apply FunctionK before or after a Functor =map= makes no difference
+
+hence =fnk(fa.map(f))= is exactly the same as =fnk(fa).map(f)=
+
+#+BEGIN_SRC scala
+  "Natural Transformation" should "satisfy law" in {
+    implicit val functorBox: Functor[Box] = new Functor[Box] {
+      def map[A, B](fa: Box[A])(f: A => B) =
+        Box(f(fa.value))
+    }
+    import cats.syntax.functor._
+    Sphere.sphereToBox(Sphere(100).map(_ + 1)) shouldBe Sphere.sphereToBox(Sphere(100)).map(_ + 1)
+  }
+#+END_SRC
+
+#+BEGIN_SRC scala
+}
+#+END_SRC

@@ -1,0 +1,219 @@
+* Free
+  :PROPERTIES:
+  :header-args: :tangle no :exports code
+  :END:
+
+#+BEGIN_SRC scala :tangle yes :exports none
+  package free
+  import org.scalatest._
+  import cats._
+  import cats.effect.IO
+  class `4-2-Free` extends AsyncFlatSpec with Matchers {
+#+END_SRC
+
+/Free Monad/ means you can get a **free** monad from any =Functor=
+
+** Free Structure
+A Free Structure is basically very similar to =Cons= and =Nil= of
+=List=, we can call such similarity /Isomorphic/
+
+#+BEGIN_SRC scala
+  seal trait Free[S[_], A]
+  final case class Pure[S[_], A](a: A) extends Free[S, A]
+  final case class Suspend[S[_], A](a: S[A]) extends Free[S, A]
+#+END_SRC
+
+=Pure= is like =Nil= representing the end of structure, and =Suspend=
+to =Cons= means there is something else left behind.
+
+To make it a Monad, which could be something like
+#+BEGIN_SRC scala
+  implicit def catsFreeMonadForFree[S[_]](implicit F:Functor[S]): Monad[Free[S, ?]] =
+    new Monad[Free[S, ?]] {
+      def pure[A](a: A): Free[S, A] = Pure(a)
+      def map[A, B](fa: Free[S, A])(f: A => B): Free[S, B] = fa.flatMap(a=>Pure(f(a)))
+      def flatMap[A, B](a: Free[S, A])(f: A => Free[S, B]): Free[S, B] = a match {
+        case Pure(a) => f(a)
+        case Suspend(a) => Suspend(F.map(a)(next=>next.flatMap(f)))
+      }
+    }
+#+END_SRC
+
+while you probably noticed that we need =S= to be a =Functor= first, so we can
+=map= it's next step and continuous =flatMap=
+
+** CoYoneda Lemma (Trick)
+The problem become "how can we get a free functor from any =S[_]=?" then
+
+this is when we need to introduce /CoYoneda Lemma/
+
+a =CoYoneda[F[_], A]= consists of two things
+
+- a function =B => A=
+- a =F[B]=
+
+since =B= share the same polymorphism of =A= and =F=, they are in the same rank[fn:1], so we
+can add =B= into the type parameter of =CoYoneda= as well, which become =CoYoneda[F[_], A, B]=
+#+BEGIN_SRC scala
+    case class CoYoneda[F[_], A, B](fb: F[B], f: B => A)
+#+END_SRC
+
+#+BEGIN_SRC scala :tangle no :exports code
+  implicit def functorForCoyoneda = new Functor[CoYoneda[F, ?, B]] {
+    def map[A, C](fa:CoYoneda[F, A, B])(f: A=>C): CoYoneda[F, C, B] {
+      CoYoneda(fa.fb, (f compose fa.f))
+    }
+  }
+#+END_SRC
+
+Now we know how to map over a =CoYoneda=, but how can we get a =CoYoneda=
+from any =F[_]=
+
+That would be /CoYoneda Lemma/ (Trick)
+
+The trick is to use the =identity= function, which will turn =B= into =A=, so any =F[_]= can be converted to
+=CoYoneda[F, A, A]=, and eventually become a Functor
+
+#+BEGIN_SRC scala
+  def lift[F[_], A](fa: F[A]):CoYoneda[F, A, A] =
+    CoYoneda(fa, identity:A=>A)
+#+END_SRC
+
+So to construct a Free Monad, we can use the CoYoneda Trick to lift any =F[_]=
+
+#+BEGIN_SRC scala
+  def liftF[F[_], A](value: F[A]): Free[F, A] = Suspend(lift(value))
+#+END_SRC
+
+** Effects
+Let's forget about CoYoneda[fn:2] for now, I'm gonna show you how easy to use cat's Free to free your ADT and get a free program
+then, separate your effect from the core logic.
+
+Imagine we have a document database to query, it's easy to abstract 3 method on it:
+
+- =get(key: String)=
+- =put(key: String, value: String)=
+- =delete(key: String)=
+
+#+BEGIN_SRC scala
+object Database {
+  def get(key: String): String = {
+    println("querying database")
+    s"value for key $key"
+  }
+
+  def put(key: String, value: String) ={
+    println(s"saving $key to database")
+  }
+
+  def delete(key: String) = {
+    println(s"deleteing $key")
+  }
+}
+#+END_SRC
+
+All of these actions are actually effects, because they will potentially cause some state changes outside the scope where the method is executed.
+
+While testing those methods could be a nightmare as well, you have to either setup a real database or mock these methods' implementation
+
+#+BEGIN_SRC scala :tangle yes :exports none
+behavior of "program"
+it should "hard to unit test get put delete" in {
+  program() shouldBe (())
+}
+#+END_SRC
+
+You will find it's too hard to mock a =object=, so the test could end up with a integration test which require real database, or refactor =Database= to a normal class so you can mock it properly.
+
+It's hard to test because:
+- imperative: when you call the method, the effect actually happen
+- stateful: the effect and result depends on database, which is out of the scope of =Database=
+
+To make your program more declarative and testable, we can describe all database interactions using ADT
+
+#+BEGIN_SRC scala
+sealed trait DbEff[A]
+case class Put(key: String, value: String) extends DbEff[Unit]
+case class Get(key: String) extends DbEff[String]
+case class Delete(key: String) extends DbEff[Unit]
+#+END_SRC
+
+All these ADTs is just describing what kind of behavior a database can provide, and what value they should return.
+
+no database interaction will actually happen when you construct those ADTs
+
+** Free your program
+
+to lift those ADTs into Free, simply using =liftF= [fn:4] we've introduced in [[*CoYoneda Lemma (Trick)]]
+
+#+BEGIN_SRC scala
+object DbEff {
+  def get(key: String): Free[DbEff, String] = Free.liftF[DbEff, String](Get(key))
+  def put(key: String, v: String): Free[DbEff, Unit] = ???
+  def delete(key: String): Free[DbEff, Unit] = ???
+}
+#+END_SRC
+
+=put= and =delete= should be pretty much the same
+
+to lift your =program= defined before to free, the simple trick is to change all ~=~ to =<-= and remove =val=
+
+#+BEGIN_SRC scala
+object program {                         object freeProgram {
+  def apply() = {                          val oldKey = "123"
+    val oldKey = "123"                     def apply() = for {
+    val oldVal = Database.get(oldKey)        oldVal <- DbEff.get(oldKey)
+    val newVal = s"this is new: $oldVal"     newVal = s"this is new: $oldVal"
+    val newKey = oldKey.reverse              newKey = oldKey.reverse
+    Database.put(newKey, newVal)             _ <- DbEff.put(newKey, newVal)
+    Database.delete(oldKey)                  _ <- DbEff.delete(oldKey)
+  }                                        } yield ()
+}                                        }
+#+END_SRC
+
+** Interpret your program
+
+Since our program is organized, we can define an interpreter just for test, without actually talk to database, but
+simulating the interactions between your program and database. [fn:3]
+
+#+BEGIN_SRC scala :tangle yes :exports none
+object DbEffInterp {
+  val fake = Lambda[DbEff ~> IO](_ match {
+    case Get("123")    => IO(s"value for key 123")
+    case Put("321", v) => IO(println(s"saving 123 to database"))
+    case Delete("123") => IO(println(s"deleteing 123"))
+    case a => IO(fail(s"unexpecting interaction: $a"))
+  })
+}
+#+END_SRC
+
+So, if you run your program over the interpreter
+
+#+BEGIN_SRC scala :tangle yes :exports none
+  behavior of "free program"
+  it should "run on fake interpreter to verify your program logic" in {
+    (freeProgram() foldMap DbEffInterp.fake) unsafeRunSync () shouldBe (())
+  }
+#+END_SRC
+
+a nice message will tell you when =sbt "testOnly *Free"=
+#+BEGIN_EXAMPLE
+[info] - should run on fake interpreter to verify your program logic *** FAILED ***
+[info]   unexpecting interaction: Delete(321) (4-2-free.scala:17)
+#+END_EXAMPLE
+
+you'll know what to fix, seems we have some business bug in =freeProgram=
+
+* Footnotes
+
+[fn:4] here we're using cats free implementation, which already have CoYoneda embedded in =Free= implementation, so we don't need to =lift= the value to =CoYoneda= our self.
+
+[fn:3] remember the =Lambda= trick from [[file:4-1-kind.org::*Kind Projector]] ?
+
+[fn:2] it's totally fine if you didn't follow, you don't actually need to understand how Free is implemented to use it.
+
+[fn:1] hope you still remember what "rank" is from 4-1-kind
+
+#+BEGIN_SRC scala :tangle yes :exports none
+}
+#+END_SRC
