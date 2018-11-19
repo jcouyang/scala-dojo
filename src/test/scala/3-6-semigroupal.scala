@@ -1,6 +1,6 @@
 package monad
 
-import cats.Cartesian
+import cats._
 import cats.instances.option._
 import org.scalatest._
 import scala.concurrent.Future
@@ -23,12 +23,12 @@ If we have a `F[A]` and `F[B]`, `product` method can combine them into `F[(A, B)
   behavior of "Semigroupal"
 
   it should "join 2 contexts" in {
-    Cartesian[Option].product(Some(123), Some("abc")) shouldBe Some(
+    Semigroupal[Option].product(Some(123), Some("abc")) shouldBe Some(
       (123, "abc"))
   }
 
   it should "join 3 contexts" in {
-    Cartesian.tuple3(Option(1), Option(2), Option(3)) shouldBe Some((1, 2, 3))
+    Semigroupal.tuple3(Option(1), Option(2), Option(3)) shouldBe Some((1, 2, 3))
   }
   markup {
     """
