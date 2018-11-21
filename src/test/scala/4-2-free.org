@@ -221,7 +221,7 @@ You'll know what to fix, seems we have some business bug in =freeProgram=
 
 [fn:4] here we're using cats free implementation, which already have CoYoneda embedded in =Free= implementation, so we don't need to =lift= the value to =CoYoneda= our self.
 
-[fn:3] remember the =Lambda= trick from [[file:4-1-kind.org::*Kind Projector]] ?
+[fn:3] remember the =Lambda= trick from [[*Kind Projector]] ?
 
 [fn:2] it's totally fine if you didn't follow, you don't actually need to understand how Free is implemented to use it.
 
