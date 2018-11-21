@@ -15,7 +15,7 @@
 
 ** Free Structure
 A Free Structure is basically very similar to =Cons= and =Nil= of
-=List=, we can call such similarity /Isomorphic/
+=List=, we call such similarity /Isomorphic/
 
 #+BEGIN_SRC scala
   seal trait Free[S[_], A]
@@ -39,55 +39,61 @@ To make it a Monad, which could be something like
     }
 #+END_SRC
 
-while you probably noticed that we need =S= to be a =Functor= first, so we can
+while you probably noticed that we need =S= to be a =Functor= first, so that we can
 =map= it's next step and continuous =flatMap=
 
 ** CoYoneda Lemma (Trick)
-The problem become "how can we get a free functor from any =S[_]=?" then
+The problem becomes "how can we get a free functor from any =S[_]=?" then
 
-this is when we need to introduce /CoYoneda Lemma/
+This is when we need to introduce /CoYoneda Lemma/:
 
-a =CoYoneda[F[_], A]= consists of two things
+A =CoYoneda[F[_], A]= consists of two things
 
 - a function =B => A=
 - a =F[B]=
 
-since =B= share the same polymorphism of =A= and =F=, they are in the same rank[fn:1], so we
-can add =B= into the type parameter of =CoYoneda= as well, which become =CoYoneda[F[_], A, B]=
+Since =B= can share the same polymorphism of =A= and =F=, they are in the same rank[fn:1], so we
+can simply add =B= into the type parameter of =CoYoneda= as well, thus it becomes =CoYoneda[F[_], A, B]=,
+which we could simply represent it as scala case class:
+
 #+BEGIN_SRC scala
     case class CoYoneda[F[_], A, B](fb: F[B], f: B => A)
 #+END_SRC
 
+And define a functor over CoYoneda is very straightforward:
 #+BEGIN_SRC scala :tangle no :exports code
   implicit def functorForCoyoneda = new Functor[CoYoneda[F, ?, B]] {
     def map[A, C](fa:CoYoneda[F, A, B])(f: A=>C): CoYoneda[F, C, B] {
-      CoYoneda(fa.fb, (f compose fa.f))
+      CoYoneda(fa.fb, (f compose fa.f)) // (f compose fa.f) has type B => C
     }
   }
 #+END_SRC
 
+It's actully very similar to /Continuation Passing Style/, which just continous composing function
+=f= to the function inside CoYoneda.
+
 Now we know how to map over a =CoYoneda=, but how can we get a =CoYoneda=
-from any =F[_]=
+from any =F[_]=?
 
-That would be /CoYoneda Lemma/ (Trick)
+/CoYoneda Lemma/ (Trick)
 
-The trick is to use the =identity= function, which will turn =B= into =A=, so any =F[_]= can be converted to
-=CoYoneda[F, A, A]=, and eventually become a Functor
+The trick is to use the magical =identity= function ~A=>A~, then we'll get a =CoYoneda[F, A, A]= from any =F[_]=
+, and eventually, =F[_]= become a Functor because any =CoYoneda= is Functor.
 
 #+BEGIN_SRC scala
   def lift[F[_], A](fa: F[A]):CoYoneda[F, A, A] =
     CoYoneda(fa, identity:A=>A)
 #+END_SRC
 
-So to construct a Free Monad, we can use the CoYoneda Trick to lift any =F[_]=
+To construct a Free Monad, we can use the CoYoneda Trick to lift any =F[_]=, and put the CoYoneda to Free.
 
 #+BEGIN_SRC scala
   def liftF[F[_], A](value: F[A]): Free[F, A] = Suspend(lift(value))
 #+END_SRC
 
 ** Effects
-Let's forget about CoYoneda[fn:2] for now, I'm gonna show you how easy to use cat's Free to free your ADT and get a free program
-then, separate your effect from the core logic.
+Let's forget about CoYoneda[fn:2] for now, I'm gonna show you how easy to use cat's Free[fn:5] to free your ADT and get a free program
+then, separate your effect from the core business logic.
 
 Imagine we have a document database to query, it's easy to abstract 3 method on it:
 
@@ -156,7 +162,7 @@ object DbEff {
 
 =put= and =delete= should be pretty much the same
 
-to lift your =program= defined before to free, the simple trick is to change all ~=~ to =<-= and remove =val=
+to lift your =program= defined before to free, the simplest trick is to change all ~=~ to =<-= and remove =val=
 
 #+BEGIN_SRC scala
 object program {                         object freeProgram {
@@ -170,6 +176,8 @@ object program {                         object freeProgram {
   }                                        } yield ()
 }                                        }
 #+END_SRC
+
+Just like that, every thing just lifted in to Free, instead of actually querying the database.
 
 ** Interpret your program
 
@@ -187,7 +195,7 @@ object DbEffInterp {
 }
 #+END_SRC
 
-So, if you run your program over the interpreter
+So, if you =foldMap= your program over the interpreter
 
 #+BEGIN_SRC scala :tangle yes :exports none
   behavior of "free program"
@@ -196,15 +204,20 @@ So, if you run your program over the interpreter
   }
 #+END_SRC
 
-a nice message will tell you when =sbt "testOnly *Free"=
+A nice message will tell you when =sbt "testOnly *Free"=
+
 #+BEGIN_EXAMPLE
 [info] - should run on fake interpreter to verify your program logic *** FAILED ***
 [info]   unexpecting interaction: Delete(321) (4-2-free.scala:17)
 #+END_EXAMPLE
 
-you'll know what to fix, seems we have some business bug in =freeProgram=
+You'll know what to fix, seems we have some business bug in =freeProgram=
+
+** TODO What really happened here
 
 * Footnotes
+
+[fn:5] Free Monad from cats already embedded CoYoneda trick in it's implementation, namely =Flatmaped=.
 
 [fn:4] here we're using cats free implementation, which already have CoYoneda embedded in =Free= implementation, so we don't need to =lift= the value to =CoYoneda= our self.
 

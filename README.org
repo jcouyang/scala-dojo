@@ -44,6 +44,8 @@ Basically just make the following tests compile and all green...
 3-6-semigroupal.scala
 3-7-validated.scala
 3-8-traverse.scala
+4-1-kind.scala
+4-2-free.scala
 #+END_EXAMPLE
 
 ** Typeclasses Coverage
