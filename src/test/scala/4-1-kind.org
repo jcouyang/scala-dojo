@@ -38,7 +38,7 @@ val first = new (List ~> Option) {
 
 ** Kind Projector
 
-you'll notice that we've include a compiler plugin =kind-projector= in =build.sbt=
+you'll notice that we've include a compiler plugin =kind-projector=[fn:1] in =build.sbt=
 
 it provides us pretty syntactic suger for such case
 
@@ -46,7 +46,7 @@ it provides us pretty syntactic suger for such case
 val first = Lambda[List ~> Option](_.headOption)
 #+END_SRC
 
-which will expand to exactly the same code like what we defined before.
+which will be expanded to exactly the same code as what we defined before.
 
 #+BEGIN_SRC scala
   behavior of "FunctionK"
@@ -57,8 +57,8 @@ which will expand to exactly the same code like what we defined before.
 
 ** Rank N Type
 
-But why this is useful than function, the =fnk= in =spherePrintable= can be easily replace with a simple function
-and it should behave still the same with no doubt.
+But why this is useful than function, the =fnk= in =spherePrintable= can be easily replace with a
+simple function and it should behave still the same.
 
 #+BEGIN_SRC scala :exports none :tangle no
 implicit def spherePrintable[A](implicit p: Printable[Box[A]],
@@ -94,10 +94,10 @@ you will get some compile error as such
 [error]                                   ^
 #+END_EXAMPLE
 
-Apparently when your =fn= stick to a =C= type, it's not convertible to neither A nor B type, even if you stick it
+Apparently when your =fn= is sticked to a =C= type, it's not convertible to neither A nor B type, even if you stick it
 to =A= type, then the =tupleOfSphere._2= can't convert to =A= either.
 
-So this is call /Rank 1 Type/, because all types A, B, C are fixed in the same rank of =tuplePrintable='s polymorphism.
+This is /Rank 1 Type/, because all types A, B, C are fixed in the same rank of =tuplePrintable='s polymorphism.
 
 To make such code compile, you'll need to make =fn= as =Rank 2 Type=, which means =fn= will not be fixed in the first rank of =tuplePrintable= polymorphism, it's type polymorphism will be in another rank totally independent from the =tuplePrintable=
 
@@ -110,11 +110,13 @@ To make such code compile, you'll need to make =fn= as =Rank 2 Type=, which mean
 
 ** Natural Transformation
 
-If your kinds are happen to be Functor, than this functionK becomes /Natural Transformation/
+If your kinds are happened to be a Functor, then this functionK becomes /Natural Transformation/
 
-There's nothing different except Natural Transformation will provide you a property:
+There's nothing different except that Natural Transformation will provide you a property:
 
-apply FunctionK before or after a Functor =map= makes no difference
+#+BEGIN_QUOTE
+applying FunctionK before or after a Functor =map= makes no difference
+#+END_QUOTE
 
 hence =fnk(fa.map(f))= is exactly the same as =fnk(fa).map(f)=
 
@@ -132,3 +134,7 @@ hence =fnk(fa.map(f))= is exactly the same as =fnk(fa).map(f)=
 #+BEGIN_SRC scala
 }
 #+END_SRC
+
+* Footnotes
+
+[fn:1] https://github.com/non/kind-projector
