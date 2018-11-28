@@ -4,21 +4,6 @@ import org.scalatest._
 
 class `3.4.State` extends AsyncFlatSpec with Matchers {
 
-  markup {
-    """
-State Monad
-=========
-Same as a Writer Monad providing atomic logging, a State Monad will provide you thread safe atomic state operations.
-
-Regardless it's name is `State`, it's pure functional, lazy and immutable operations.
-
-Very similar to Reader, you can use `State.apply` to create a State Monad
-```scala
-State[Int, String](state => (state, "result"))
-```
-the differences from `Reader` is that it return a tuple which includes the new state.
-"""
-  }
   behavior of "State"
 
   it should "eval Int" in {
@@ -50,4 +35,5 @@ the differences from `Reader` is that it return a tuple which includes the new s
     } yield ans
     calculator.runA(Nil).value shouldBe 21
   }
+
 }

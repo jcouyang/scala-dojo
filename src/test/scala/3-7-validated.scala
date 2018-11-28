@@ -5,19 +5,6 @@ import org.scalatest._
 
 class `3.7.Validated` extends AsyncFlatSpec with Matchers {
 
-  markup {
-    """
-Hint: There is also a shortcut for `tupled` and `map` -- `mapN` from `cats.syntax.apply`
-
-Validated
-=========
-Either is a fail fast data type, which means if something goes wrong, it will skip everything
-else. But when it comes to a senario of validationg form, we would rather validate everything
-and return all invalid message at one go.
-
-"""
-  }
-
   behavior of "create Cat from form input"
   it should "check empty input " in {
     SemiNAppli.createCatFromForm(Map()) shouldBe Invalid(
@@ -54,4 +41,5 @@ and return all invalid message at one go.
                             "food" -> "Lasagne")) shouldBe Valid(
       Cat("Garfield", 1978, "Lasagne"))
   }
+
 }
