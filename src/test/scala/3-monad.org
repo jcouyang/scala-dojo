@@ -558,9 +558,10 @@ Hint: using =Future.traverse=
   }
 #+END_SRC
 With traverse and identity, you can easily just create another very useful function =sequence=
-===
+
+#+BEGIN_SRC scala :tangle no
 def sequence[G[_]: Applicative, B](inputs: F[G[B]]): G[F[B]]  = traverse(inputs)(identity)
-===
+#+END_SRC
 
 which is very useful e.g. you want to convert a =List[Future[?]]= to =Future[List[?]]=
 
