@@ -48,6 +48,12 @@ Basically just make the following tests compile and all green...
 4-2-free.scala
 #+END_EXAMPLE
 
+all the tests are actually generated from following literal programming org files
+- https://github.com/jcouyang/scala-dojo/blob/master/src/test/scala/2-typeclasses.org
+- https://github.com/jcouyang/scala-dojo/blob/master/src/test/scala/3-monad.org
+- https://github.com/jcouyang/scala-dojo/blob/master/src/test/scala/4-1-kind.org
+- https://github.com/jcouyang/scala-dojo/blob/master/src/test/scala/4-2-free.org
+
 ** Typeclasses Coverage
 [[https://user-images.githubusercontent.com/1235045/46420398-4b1a9580-c773-11e8-8dd7-bf1c7335f8f7.PNG]]
 
